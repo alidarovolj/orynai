@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'constants.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('kk'), Locale('ru')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('kk'),
+      startLocale: const Locale('kk'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,6 +25,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Orynai',
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.buttonBackground,
@@ -21,8 +35,24 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: AppColors.background,
         useMaterial3: true,
-        textTheme: GoogleFonts.manropeTextTheme(),
-        fontFamily: GoogleFonts.manrope().fontFamily,
+        fontFamily: 'Manrope',
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(fontFamily: 'Manrope'),
+          displayMedium: TextStyle(fontFamily: 'Manrope'),
+          displaySmall: TextStyle(fontFamily: 'Manrope'),
+          headlineLarge: TextStyle(fontFamily: 'Manrope'),
+          headlineMedium: TextStyle(fontFamily: 'Manrope'),
+          headlineSmall: TextStyle(fontFamily: 'Manrope'),
+          titleLarge: TextStyle(fontFamily: 'Manrope'),
+          titleMedium: TextStyle(fontFamily: 'Manrope'),
+          titleSmall: TextStyle(fontFamily: 'Manrope'),
+          bodyLarge: TextStyle(fontFamily: 'Manrope'),
+          bodyMedium: TextStyle(fontFamily: 'Manrope'),
+          bodySmall: TextStyle(fontFamily: 'Manrope'),
+          labelLarge: TextStyle(fontFamily: 'Manrope'),
+          labelMedium: TextStyle(fontFamily: 'Manrope'),
+          labelSmall: TextStyle(fontFamily: 'Manrope'),
+        ),
       ),
       home: const HomePage(),
     );
@@ -39,7 +69,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _isScrolled = false;
   final ScrollController _scrollController = ScrollController();
-  String _selectedLanguage = 'ҚАЗ'; // По умолчанию казахский
 
   @override
   void initState() {
@@ -75,7 +104,6 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      drawer: _buildDrawer(),
       body: Stack(
         children: [
           // Верхняя SafeArea с изменяющимся цветом
@@ -154,7 +182,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               onPressed: () {
-                                Scaffold.of(context).openDrawer();
+                                _showMenuModal(context);
                               },
                             ),
                           ),
@@ -171,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         // Первый блок - логотип и текст
                         SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.6,
+                          height: MediaQuery.of(context).size.height * 0.5,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: AppSizes.paddingMedium,
@@ -195,98 +223,56 @@ class _HomePageState extends State<HomePage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     // Логотип Orynai
-                                    Image.asset(
-                                      'assets/images/logos/main.png',
-                                      height: AppSizes.mainLogoHeight,
-                                      fit: BoxFit.contain,
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingXLarge,
-                                    ),
-                                    // Описательный текст
-                                    const Text(
-                                      'Алматы қаласының\nэлектрондық зираттар базасы',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.iconAndText,
-                                        height: 1.3,
+                                    SizedBox(
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          2 /
+                                          3,
+                                      child: Image.asset(
+                                        'assets/images/logos/main.png',
+                                        height: AppSizes.mainLogoHeight,
+                                        fit: BoxFit.contain,
                                       ),
                                     ),
-                                    const Spacer(),
+                                    // Описательный текст
+                                    Text(
+                                      'app.subtitle'.tr(),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.iconAndText,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
                                     // Кнопки
                                     Column(
                                       children: [
                                         // Первая кнопка - "Маманға қоңырау шалу"
-                                        SizedBox(
-                                          width: double.infinity,
-                                          height: AppSizes.buttonHeight,
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              // TODO: Реализовать звонок специалисту
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  AppColors.buttonBackground,
-                                              foregroundColor: Colors.white,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      AppSizes
-                                                          .buttonBorderRadius,
-                                                    ),
-                                              ),
-                                              elevation: 0,
-                                            ),
-                                            child: const Text(
-                                              'Маманға қоңырау шалу',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
+                                        _buildAppButton(
+                                          text: 'buttons.callSpecialist'.tr(),
+                                          onPressed: () {
+                                            // TODO: Реализовать звонок специалисту
+                                          },
+                                          backgroundColor:
+                                              AppColors.buttonBackground,
                                         ),
                                         const SizedBox(
                                           height: AppSizes.paddingMedium,
                                         ),
                                         // Вторая кнопка - "Жерлеуді ұйымдастыру"
-                                        SizedBox(
-                                          width: double.infinity,
-                                          height: AppSizes.buttonHeight,
-                                          child: OutlinedButton(
-                                            onPressed: () {
-                                              // TODO: Реализовать организацию похорон
-                                            },
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor: AppColors.border,
-                                              side: const BorderSide(
-                                                color: AppColors.border,
-                                                width: 1.5,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      AppSizes
-                                                          .buttonBorderRadius,
-                                                    ),
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              'Жерлеуді ұйымдастыру',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
+                                        _buildAppButton(
+                                          text: 'buttons.organizeFuneral'.tr(),
+                                          onPressed: () {
+                                            // TODO: Реализовать организацию похорон
+                                          },
+                                          isOutlined: true,
+                                          foregroundColor: AppColors.border,
+                                          borderColor: AppColors.border,
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingXLarge,
-                                    ),
+                                    const SizedBox(height: 0),
                                   ],
                                 ),
                               ],
@@ -303,33 +289,36 @@ class _HomePageState extends State<HomePage> {
                               const SizedBox(height: AppSizes.paddingLarge),
                               _buildServiceCard(
                                 iconPath: 'assets/icons/benefits/1.svg',
-                                title: 'ОРЫН БРОНДАУ',
-                                description: 'Зиратта орынды онлайн брондаңыз',
-                                buttonText: 'Өту',
+                                title: 'services.placeBooking.title'.tr(),
+                                description: 'services.placeBooking.description'
+                                    .tr(),
+                                buttonText: 'buttons.go'.tr(),
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               _buildServiceCard(
                                 iconPath: 'assets/icons/benefits/2.svg',
-                                title: 'МЕМОРИАЛ',
-                                description:
-                                    'Мемориал мен өз отбасы ағашыңызды онлайн жасаңыз',
-                                buttonText: 'Өту',
+                                title: 'services.memorial.title'.tr(),
+                                description: 'services.memorial.description'
+                                    .tr(),
+                                buttonText: 'buttons.go'.tr(),
                                 showInfoText: true,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               _buildServiceCard(
                                 iconPath: 'assets/icons/benefits/3.svg',
-                                title: 'ТАУАРЛАР МЕН ҚЫЗМЕТТЕР',
+                                title: 'services.goodsAndServices.title'.tr(),
                                 description:
-                                    'Барлық жерлеу қызметтерін жеткізушілерді бір жерде жинаған маркетплейс',
-                                buttonText: 'Өту',
+                                    'services.goodsAndServices.description'
+                                        .tr(),
+                                buttonText: 'buttons.go'.tr(),
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               _buildServiceCard(
                                 iconPath: 'assets/icons/benefits/4.svg',
-                                title: 'ЖЕРЛЕУДІ ТАБУ',
-                                description: 'Іздеу үшін деректерді енгізіңіз',
-                                buttonText: 'Іздеу',
+                                title: 'services.findBurial.title'.tr(),
+                                description: 'services.findBurial.description'
+                                    .tr(),
+                                buttonText: 'buttons.search'.tr(),
                                 showInfoText: true,
                               ),
                               const SizedBox(height: AppSizes.paddingXLarge),
@@ -345,91 +334,90 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               const SizedBox(height: AppSizes.paddingXLarge),
                               // Заголовок
-                              const Text(
-                                'Қалай әрекет ету керек,\nқадамдық нұсқаулық',
+                              Text(
+                                'steps.title'.tr(),
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                   color: AppColors.iconAndText,
-                                  height: 1.3,
+                                  height: 1.2,
                                 ),
                               ),
-                              const SizedBox(height: AppSizes.paddingXLarge),
+                              const SizedBox(height: 32),
                               // Карточки с шагами
                               _buildStepCard(
-                                title: 'Көмек қажеттілігін түсіну',
+                                title: 'steps.step1.title'.tr(),
                                 paragraphs: [
-                                  'Адам жерлеу қызметтері жақын арада қажет болатын жағдайға тап болады. Бұл туыстың жағдайының нашарлауы, ауруханадан қоңырау немесе дайындалу керектігін ішкі түсіну болуы мүмкін.',
-                                  'Сұрақтар, алаңдаушылық және жауапкершілікті өз мойнына алып, бәрін дұрыс ұйымдастыруға көмектесетіндерді табу қажеттілігі туындайды.',
+                                  'steps.step1.paragraph1'.tr(),
+                                  'steps.step1.paragraph2'.tr(),
                                 ],
-                                buttonText: 'Қолдау',
+                                buttonText: 'buttons.support'.tr(),
                                 buttonColor: AppColors.buttonBackground,
                                 buttonIcon: Icons.phone,
                                 isPhoneIcon: true,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               _buildStepCard(
-                                title: 'Алғашқы кеңес беру және дайындық',
+                                title: 'steps.step2.title'.tr(),
                                 paragraphs: [
-                                  'Бұл кезеңде адам жауаптар іздейді: қандай құжаттар қажет, қайда жүгіну керек, алдын ала нені білу маңызды. Ол біздің қызметпен байланысады.',
-                                  'Біз тегін түрде әрекет тәртібін түсіндіреміз, қандай кезеңдер болатынын айтамыз және маңызды сәтте бәрі түсінікті болуы үшін дайындалуға көмектесеміз.',
+                                  'steps.step2.paragraph1'.tr(),
+                                  'steps.step2.paragraph2'.tr(),
                                 ],
-                                buttonText: 'Тегін кеңес',
+                                buttonText: 'buttons.freeConsultation'.tr(),
                                 buttonColor: AppColors.buttonBackground,
                                 buttonIcon: Icons.phone,
                                 isPhoneIcon: true,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               _buildStepCard(
-                                title:
-                                    'Қайтыс болу туралы хабарлау және жұмысты бастау',
+                                title: 'steps.step3.title'.tr(),
                                 paragraphs: [
-                                  'Қайғылы оқиға болған кезде, отбасы кімге сенуге болатынын біледі. Олар бізге қоңырау шалады – және осы сәттен бастап біз жұмысқа кірісеміз.',
-                                  'Біз кездесеміз, мәліметтерді келісеміз және процесті өз мойнымызға аламыз: құжаттарды рәсімдейміз, жерлеу орнын дайындаймыз, көлікті қамтамасыз етеміз және рәсімнің барлық кезеңдерін ұйымдастырамыз.',
+                                  'steps.step3.paragraph1'.tr(),
+                                  'steps.step3.paragraph2'.tr(),
                                 ],
-                                buttonText: 'Маманды шақыру',
+                                buttonText: 'buttons.callSpecialist2'.tr(),
                                 buttonColor: AppColors.buttonGreen,
                                 buttonIcon: Icons.chat,
                                 isWhatsApp: true,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               _buildStepCard(
-                                title: 'Жерлеуді өткізу',
+                                title: 'steps.step4.title'.tr(),
                                 paragraphs: [
-                                  'Белгіленген күні біз келісімге сәйкес рәсімді ұйымдастырамыз. Көлікті ұйымдастырудан бастап орынды дайындауға және рәсімдерді өткізуге дейін – бәрі мұқият, құрметпен және артық асығыссыз өтеді.',
-                                  'Туыстар жанында болады, ұйымдастырушылық мәселелерге алаңдамай – біз процесті толық бақылаймыз.',
+                                  'steps.step4.paragraph1'.tr(),
+                                  'steps.step4.paragraph2'.tr(),
                                 ],
-                                buttonText: 'Тапсырыс беру',
+                                buttonText: 'buttons.placeOrder'.tr(),
                                 buttonColor: AppColors.buttonBackground,
                                 buttonIcon: Icons.phone,
                                 isPhoneIcon: true,
                                 hasSecondButton: true,
-                                secondButtonText: 'Тапсырыс беру',
+                                secondButtonText: 'buttons.placeOrder'.tr(),
                                 secondButtonColor: AppColors.buttonGreen,
                                 secondButtonIcon: Icons.chat,
                                 isSecondButtonWhatsApp: true,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               _buildStepCard(
-                                title: 'Рәсімнен кейінгі қолдау',
+                                title: 'steps.step5.title'.tr(),
                                 paragraphs: [
-                                  'Жерлеуден кейін бірқатар заңды және тұрмыстық формальдіктер қалады. Біз қайтыс болу туралы куәлікті рәсімдеуге, тиесілі төлемдерді, анықтамалар мен құжаттарды алуға көмектесеміз.',
-                                  'Отбасы бюрократиямен жалғыз қалмауы үшін барлық рәсімдер толық аяқталғанша сүйемелдейміз.',
+                                  'steps.step5.paragraph1'.tr(),
+                                  'steps.step5.paragraph2'.tr(),
                                 ],
-                                buttonText: 'Құжаттармен көмек',
+                                buttonText: 'buttons.helpWithDocuments'.tr(),
                                 buttonColor: AppColors.buttonGreen,
                                 buttonIcon: Icons.chat,
                                 isWhatsApp: true,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               _buildStepCard(
-                                title: 'Күтім және естелік сақтау',
+                                title: 'steps.step6.title'.tr(),
                                 paragraphs: [
-                                  'Отбасының қалауы бойынша біз қабірге тұрақты күтім жасауды өз мойнымызға аламыз: тазалау, гүлдер, ескерткішті жаңарту, орынды абаттандыру.',
-                                  'Сонымен адамның естелігі лайықты түрде сақталады, ал жерлеу орны — күтімді болады.',
+                                  'steps.step6.paragraph1'.tr(),
+                                  'steps.step6.paragraph2'.tr(),
                                 ],
-                                buttonText: 'Күтімге тапсырыс беру',
+                                buttonText: 'buttons.orderCare'.tr(),
                                 buttonColor: AppColors.buttonGreen,
                                 buttonIcon: Icons.chat,
                                 isWhatsApp: true,
@@ -449,16 +437,16 @@ class _HomePageState extends State<HomePage> {
                               child: Column(
                                 children: [
                                   // Заголовок
-                                  const Padding(
-                                    padding: EdgeInsets.only(
+                                  Padding(
+                                    padding: const EdgeInsets.only(
                                       top: AppSizes.paddingLarge,
                                       left: AppSizes.paddingMedium,
                                       right: AppSizes.paddingMedium,
                                     ),
                                     child: Text(
-                                      'Бәріне алдын ала дайындалу',
+                                      'info.prepareTitle'.tr(),
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: AppColors.iconAndText,
@@ -469,14 +457,14 @@ class _HomePageState extends State<HomePage> {
                                     height: AppSizes.paddingMedium,
                                   ),
                                   // Текст
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: AppSizes.paddingMedium,
                                     ),
                                     child: Text(
-                                      'Тәжірибе көрсеткендей, алдын ала дайындық процесті жеңілдетеді және шығындарды азайтады',
+                                      'info.prepareText'.tr(),
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 14,
                                         color: AppColors.iconAndText,
                                         height: 1.5,
@@ -492,32 +480,13 @@ class _HomePageState extends State<HomePage> {
                                       AppSizes.paddingMedium,
                                       AppSizes.paddingLarge,
                                     ),
-                                    child: SizedBox(
-                                      width: double.infinity,
-                                      height: AppSizes.buttonHeight,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          // TODO: Реализовать действие
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              AppColors.buttonBackground,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              AppSizes.buttonBorderRadius,
-                                            ),
-                                          ),
-                                          elevation: 0,
-                                        ),
-                                        child: const Text(
-                                          'Тегін кеңес',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
+                                    child: _buildAppButton(
+                                      text: 'buttons.freeConsultation'.tr(),
+                                      onPressed: () {
+                                        // TODO: Реализовать действие
+                                      },
+                                      backgroundColor:
+                                          AppColors.buttonBackground,
                                     ),
                                   ),
                                 ],
@@ -527,91 +496,306 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         // Блок контактов
-                        Column(
-                          children: [
-                            const SizedBox(height: AppSizes.paddingXLarge),
-                            Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                              ),
-                              child: Column(
-                                children: [
-                                  const SizedBox(
-                                    height: AppSizes.paddingXLarge,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.paddingMedium,
+                          ),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: AppSizes.paddingXLarge),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.buttonBorderRadius,
                                   ),
-                                  // Заголовок
-                                  const Text(
-                                    'Байланыс',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
+                                ),
+                                child: Column(
+                                  children: [
+                                    const SizedBox(
+                                      height: AppSizes.paddingXLarge,
+                                    ),
+                                    // Заголовок
+                                    Text(
+                                      'contacts.title'.tr(),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.iconAndText,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingSmall,
+                                    ),
+                                    // Подзаголовок
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppSizes.paddingMedium,
+                                      ),
+                                      child: Text(
+                                        'contacts.subtitle'.tr(),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.iconAndText,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingXLarge,
+                                    ),
+                                    // Адрес
+                                    Icon(
+                                      Icons.location_on_outlined,
+                                      size: 32,
                                       color: AppColors.iconAndText,
                                     ),
-                                  ),
-                                  const SizedBox(height: AppSizes.paddingSmall),
-                                  // Подзаголовок
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: AppSizes.paddingMedium,
+                                    const SizedBox(
+                                      height: AppSizes.paddingSmall,
                                     ),
-                                    child: Text(
-                                      'Біз күн сайын тәулік бойы кеңес береміз',
+                                    Text(
+                                      'contacts.city'.tr(),
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 14,
                                         color: AppColors.iconAndText,
                                       ),
                                     ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingSmall,
+                                    ),
+                                    Text(
+                                      'contacts.address'.tr(),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.iconAndText,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingLarge,
+                                    ),
+                                    // Разделительная линия
+                                    Divider(
+                                      color: AppColors.accordionBorder,
+                                      thickness: 1,
+                                      height: 1,
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingLarge,
+                                    ),
+                                    // Телефон
+                                    Icon(
+                                      Icons.phone_outlined,
+                                      size: 32,
+                                      color: AppColors.iconAndText,
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingSmall,
+                                    ),
+                                    Text(
+                                      'contacts.phone'.tr(),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.iconAndText,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingMedium,
+                                    ),
+                                    // Социальные сети
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        IconButton(
+                                          icon: Container(
+                                            width: 24,
+                                            height: 24,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: AppColors.iconAndText,
+                                                width: 1.5,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Center(
+                                              child: Container(
+                                                width: 12,
+                                                height: 12,
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color:
+                                                        AppColors.iconAndText,
+                                                    width: 1.5,
+                                                  ),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Center(
+                                                  child: Container(
+                                                    width: 3,
+                                                    height: 3,
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                          color: AppColors
+                                                              .iconAndText,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            // TODO: Открыть Instagram
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.facebook,
+                                            color: AppColors.iconAndText,
+                                          ),
+                                          onPressed: () {
+                                            // TODO: Открыть Facebook
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingLarge,
+                                    ),
+                                    // Разделительная линия
+                                    Divider(
+                                      color: AppColors.accordionBorder,
+                                      thickness: 1,
+                                      height: 1,
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingLarge,
+                                    ),
+                                    // Email
+                                    Icon(
+                                      Icons.email_outlined,
+                                      size: 32,
+                                      color: AppColors.iconAndText,
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingSmall,
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        // TODO: Открыть email
+                                      },
+                                      child: Text(
+                                        'contacts.email'.tr(),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.iconAndText,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: AppSizes.paddingXLarge,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.paddingXLarge),
+                            ],
+                          ),
+                        ),
+                        // Футер
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSizes.paddingXLarge),
+                          color: AppColors.headerScrolled,
+                          child: Stack(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Навигационные ссылки
+                                  _buildFooterLink(
+                                    text: 'Біз туралы',
+                                    onTap: () {
+                                      // TODO: Навигация на "О нас"
+                                    },
+                                  ),
+                                  const SizedBox(height: AppSizes.paddingSmall),
+                                  _buildFooterLink(
+                                    text: 'Мақалалар',
+                                    onTap: () {
+                                      // TODO: Навигация на "Статьи"
+                                    },
+                                  ),
+                                  const SizedBox(height: AppSizes.paddingSmall),
+                                  _buildFooterLink(
+                                    text: 'Қазақстан зираттары',
+                                    onTap: () {
+                                      // TODO: Навигация на "Кладбища Казахстана"
+                                    },
                                   ),
                                   const SizedBox(
-                                    height: AppSizes.paddingXLarge,
+                                    height: AppSizes.paddingMedium,
                                   ),
-                                  // Адрес
-                                  Icon(
-                                    Icons.location_on_outlined,
-                                    size: 32,
-                                    color: AppColors.iconAndText,
+                                  // Ссылки на услуги/политику
+                                  _buildFooterLink(
+                                    text: 'Көмек',
+                                    onTap: () {
+                                      // TODO: Навигация на "Помощь"
+                                    },
                                   ),
                                   const SizedBox(height: AppSizes.paddingSmall),
-                                  const Text(
-                                    'Алматы қаласы',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
+                                  _buildFooterLink(
+                                    text: 'Тауарлар мен қызметтер',
+                                    onTap: () {
+                                      // TODO: Навигация на "Товары и услуги"
+                                    },
+                                  ),
+                                  const SizedBox(height: AppSizes.paddingSmall),
+                                  _buildFooterLink(
+                                    text: 'Құпиялық саясаты',
+                                    onTap: () {
+                                      // TODO: Навигация на "Политика конфиденциальности"
+                                    },
+                                  ),
+                                  const SizedBox(
+                                    height: AppSizes.paddingMedium,
+                                  ),
+                                  // Контактная информация
+                                  Text(
+                                    'Алматы, Қазақстан',
+                                    style: const TextStyle(
                                       fontSize: 14,
-                                      color: AppColors.iconAndText,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   const SizedBox(height: AppSizes.paddingSmall),
-                                  const Text(
-                                    'Тимирязев көшесі, 428',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.iconAndText,
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Разделительная линия
-                                  Divider(
-                                    color: AppColors.accordionBorder,
-                                    thickness: 1,
-                                    height: 1,
-                                  ),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Телефон
-                                  Icon(
-                                    Icons.phone_outlined,
-                                    size: 32,
-                                    color: AppColors.iconAndText,
-                                  ),
-                                  const SizedBox(height: AppSizes.paddingSmall),
-                                  const Text(
+                                  Text(
                                     '+7 (775) 810-01-10',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 14,
-                                      color: AppColors.iconAndText,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSizes.paddingSmall),
+                                  GestureDetector(
+                                    onTap: () {
+                                      // TODO: Открыть email
+                                    },
+                                    child: Text(
+                                      'info@orynai.kz',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                        decoration: TextDecoration.underline,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(
@@ -619,7 +803,6 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   // Социальные сети
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       IconButton(
                                         icon: Container(
@@ -627,7 +810,7 @@ class _HomePageState extends State<HomePage> {
                                           height: 24,
                                           decoration: BoxDecoration(
                                             border: Border.all(
-                                              color: AppColors.iconAndText,
+                                              color: Colors.white,
                                               width: 1.5,
                                             ),
                                             borderRadius: BorderRadius.circular(
@@ -640,7 +823,7 @@ class _HomePageState extends State<HomePage> {
                                               height: 12,
                                               decoration: BoxDecoration(
                                                 border: Border.all(
-                                                  color: AppColors.iconAndText,
+                                                  color: Colors.white,
                                                   width: 1.5,
                                                 ),
                                                 shape: BoxShape.circle,
@@ -651,8 +834,7 @@ class _HomePageState extends State<HomePage> {
                                                   height: 3,
                                                   decoration:
                                                       const BoxDecoration(
-                                                        color: AppColors
-                                                            .iconAndText,
+                                                        color: Colors.white,
                                                         shape: BoxShape.circle,
                                                       ),
                                                 ),
@@ -665,9 +847,9 @@ class _HomePageState extends State<HomePage> {
                                         },
                                       ),
                                       IconButton(
-                                        icon: Icon(
+                                        icon: const Icon(
                                           Icons.facebook,
-                                          color: AppColors.iconAndText,
+                                          color: Colors.white,
                                         ),
                                         onPressed: () {
                                           // TODO: Открыть Facebook
@@ -675,43 +857,25 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Разделительная линия
-                                  Divider(
-                                    color: AppColors.accordionBorder,
-                                    thickness: 1,
-                                    height: 1,
-                                  ),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Email
-                                  Icon(
-                                    Icons.email_outlined,
-                                    size: 32,
-                                    color: AppColors.iconAndText,
-                                  ),
-                                  const SizedBox(height: AppSizes.paddingSmall),
-                                  GestureDetector(
-                                    onTap: () {
-                                      // TODO: Открыть email
-                                    },
-                                    child: const Text(
-                                      'info@orynai.kz',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.iconAndText,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: AppSizes.paddingXLarge,
-                                  ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: AppSizes.paddingXLarge),
-                          ],
+                              // Кнопка чата в правом нижнем углу
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: FloatingActionButton(
+                                  onPressed: () {
+                                    // TODO: Открыть чат
+                                  },
+                                  backgroundColor: AppColors.headerScrolled,
+                                  child: const Icon(
+                                    Icons.chat_bubble_outline,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -763,7 +927,7 @@ class _HomePageState extends State<HomePage> {
       title: Text(
         title,
         style: const TextStyle(
-          fontSize: 16,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
           color: AppColors.iconAndText,
         ),
@@ -822,6 +986,95 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Глобальный виджет для унифицированных кнопок
+  Widget _buildAppButton({
+    required String text,
+    required VoidCallback onPressed,
+    Color? backgroundColor,
+    Color? foregroundColor,
+    Color? borderColor,
+    double? borderWidth,
+    Widget? icon,
+    bool isOutlined = false,
+    double? fontSize,
+    EdgeInsets? padding,
+    double? height,
+  }) {
+    final buttonPadding = padding ?? const EdgeInsets.symmetric(vertical: 14);
+    final buttonFontSize = fontSize ?? 14.0;
+    final buttonHeight = height ?? AppSizes.buttonHeight;
+
+    if (isOutlined) {
+      return SizedBox(
+        width: double.infinity,
+        height: buttonHeight,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: foregroundColor ?? AppColors.border,
+            padding: buttonPadding,
+            side: BorderSide(
+              color: borderColor ?? AppColors.border,
+              width: borderWidth ?? 1.5,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                icon,
+                const SizedBox(width: AppSizes.paddingSmall),
+              ],
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: buttonFontSize,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return SizedBox(
+        width: double.infinity,
+        height: buttonHeight,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor ?? AppColors.buttonBackground,
+            foregroundColor: foregroundColor ?? Colors.white,
+            padding: buttonPadding,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            elevation: 0,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                icon,
+                const SizedBox(width: AppSizes.paddingSmall),
+              ],
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: buttonFontSize,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
   Widget _buildActionButton({
     required String text,
     required Color color,
@@ -829,48 +1082,31 @@ class _HomePageState extends State<HomePage> {
     bool isPhoneIcon = false,
     bool isWhatsApp = false,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: () {
-          // TODO: Реализовать действие
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius),
-          ),
-          elevation: 0,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isWhatsApp)
-              SvgPicture.asset(
-                'assets/icons/whatsapp.svg',
-                width: 20,
-                height: 20,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
-                ),
-              )
-            else
-              Icon(
-                icon,
-                size: 20,
-                color: isPhoneIcon ? AppColors.iconAndText : Colors.white,
-              ),
-            const SizedBox(width: AppSizes.paddingSmall),
-            Text(
-              text,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
+    Widget? iconWidget;
+    if (isWhatsApp) {
+      iconWidget = SvgPicture.asset(
+        'assets/icons/whatsapp.svg',
+        width: 20,
+        height: 20,
+        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+      );
+    } else {
+      iconWidget = Icon(
+        icon,
+        size: 20,
+        color: isPhoneIcon ? AppColors.iconAndText : Colors.white,
+      );
+    }
+
+    return _buildAppButton(
+      text: text,
+      onPressed: () {
+        // TODO: Реализовать действие
+      },
+      backgroundColor: color,
+      icon: iconWidget,
+      fontSize: 13,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
   }
 
@@ -883,6 +1119,7 @@ class _HomePageState extends State<HomePage> {
   }) {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingLarge),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.iconAndText,
         borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius),
@@ -898,11 +1135,11 @@ class _HomePageState extends State<HomePage> {
             title,
             style: const TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: AppSizes.paddingSmall),
+          const SizedBox(height: 12),
           // Описание
           Text(
             description,
@@ -912,35 +1149,18 @@ class _HomePageState extends State<HomePage> {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: AppSizes.paddingLarge),
+          const SizedBox(height: 24),
           // Кнопка и информационная иконка
           Row(
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 44,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: Реализовать навигацию
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.iconAndText,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppSizes.buttonBorderRadius,
-                        ),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      buttonText,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                child: _buildAppButton(
+                  text: buttonText,
+                  onPressed: () {
+                    // TODO: Реализовать навигацию
+                  },
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.iconAndText,
                 ),
               ),
               const SizedBox(width: AppSizes.paddingSmall),
@@ -970,9 +1190,9 @@ class _HomePageState extends State<HomePage> {
               ),
               if (showInfoText) ...[
                 const SizedBox(width: AppSizes.paddingSmall),
-                const Text(
-                  'Как это работает',
-                  style: TextStyle(fontSize: 12, color: Colors.white),
+                Text(
+                  'services.memorial.howItWorks'.tr(),
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
                 ),
               ],
             ],
@@ -982,212 +1202,211 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDrawer() {
-    return Drawer(
-      backgroundColor: AppColors.background,
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSizes.paddingLarge),
-            // Переключатель языка
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingMedium,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedLanguage = 'РУ';
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSizes.paddingSmall,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _selectedLanguage == 'РУ'
-                              ? Colors.white
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'РУ',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _selectedLanguage == 'РУ'
-                                ? AppColors.iconAndText
-                                : AppColors.accordionBorder,
-                            fontWeight: _selectedLanguage == 'РУ'
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                          ),
-                        ),
+  void _showMenuModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSizes.paddingMedium),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Переключатель языка
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.accordionBorder.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Builder(
+                        builder: (context) {
+                          final isSelected =
+                              context.locale.languageCode == 'ru';
+                          return GestureDetector(
+                            onTap: () {
+                              context.setLocale(const Locale('ru'));
+                              Navigator.pop(context);
+                              _showMenuModal(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSizes.paddingSmall,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'РУ',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isSelected
+                                      ? AppColors.iconAndText
+                                      : AppColors.accordionBorder,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 20,
-                    color: AppColors.accordionBorder,
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedLanguage = 'ҚАЗ';
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSizes.paddingSmall,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _selectedLanguage == 'ҚАЗ'
-                              ? Colors.white
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'ҚАЗ',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _selectedLanguage == 'ҚАЗ'
-                                ? AppColors.iconAndText
-                                : AppColors.accordionBorder,
-                            fontWeight: _selectedLanguage == 'ҚАЗ'
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                          ),
-                        ),
+                    Expanded(
+                      child: Builder(
+                        builder: (context) {
+                          final isSelected =
+                              context.locale.languageCode == 'kk';
+                          return GestureDetector(
+                            onTap: () {
+                              context.setLocale(const Locale('kk'));
+                              Navigator.pop(context);
+                              _showMenuModal(context);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSizes.paddingSmall,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'ҚАЗ',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isSelected
+                                      ? AppColors.iconAndText
+                                      : AppColors.accordionBorder,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: AppSizes.paddingXLarge),
-            // Секция "КЛИЕНТТЕРГЕ"
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingMedium,
+              const SizedBox(height: AppSizes.paddingXLarge),
+              // Секция "КЛИЕНТТЕРГЕ"
+              Text(
+                'menu.forClients'.tr(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.accordionBorder,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'КЛИЕНТТЕРГЕ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.accordionBorder,
-                      fontWeight: FontWeight.w500,
-                    ),
+              const SizedBox(height: AppSizes.paddingSmall),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.person_outline,
+                  color: AppColors.iconAndText,
+                ),
+                title: Text(
+                  'menu.loginRegister'.tr(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.iconAndText,
                   ),
-                  const SizedBox(height: AppSizes.paddingSmall),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.person_outline,
-                      color: AppColors.iconAndText,
-                    ),
-                    title: Text(
-                      'Кіру/Тіркелу',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppColors.iconAndText,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Реализовать вход/регистрацию
-                    },
-                  ),
-                ],
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: Реализовать вход/регистрацию
+                },
               ),
-            ),
-            const SizedBox(height: AppSizes.paddingMedium),
-            // Разделитель
-            Divider(color: AppColors.accordionBorder, thickness: 1, height: 1),
-            const SizedBox(height: AppSizes.paddingMedium),
-            // Секция "СЕРІКТЕСТЕРГЕ"
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingMedium,
+              const SizedBox(height: AppSizes.paddingMedium),
+              // Разделитель
+              Divider(
+                color: AppColors.accordionBorder,
+                thickness: 1,
+                height: 1,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'СЕРІКТЕСТЕРГЕ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.accordionBorder,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.paddingSmall),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.business_outlined,
-                      color: AppColors.iconAndText,
-                    ),
-                    title: Text(
-                      'Қызмет көрсетуші ретінде кіру',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppColors.iconAndText,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Реализовать вход для партнеров
-                    },
-                  ),
-                ],
+              const SizedBox(height: AppSizes.paddingMedium),
+              // Секция "СЕРІКТЕСТЕРГЕ"
+              Text(
+                'menu.forPartners'.tr(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.accordionBorder,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSizes.paddingLarge),
-            // Навигационные ссылки
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingMedium,
+              const SizedBox(height: AppSizes.paddingSmall),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.business_outlined,
+                  color: AppColors.iconAndText,
+                ),
+                title: Text(
+                  'menu.loginAsProvider'.tr(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.iconAndText,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: Реализовать вход для партнеров
+                },
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDrawerMenuItem(
-                    text: 'Басты',
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Навигация на главную
-                    },
-                  ),
-                  const SizedBox(height: AppSizes.paddingSmall),
-                  _buildDrawerMenuItem(
-                    text: 'Каталог',
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Навигация в каталог
-                    },
-                  ),
-                  const SizedBox(height: AppSizes.paddingSmall),
-                  _buildDrawerMenuItem(
-                    text: 'Орнын брондау',
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Навигация на бронирование
-                    },
-                  ),
-                ],
+              const SizedBox(height: AppSizes.paddingLarge),
+              // Разделитель
+              Divider(
+                color: AppColors.accordionBorder,
+                thickness: 1,
+                height: 1,
               ),
-            ),
-          ],
+              const SizedBox(height: AppSizes.paddingLarge),
+              // Навигационные ссылки
+              _buildDrawerMenuItem(
+                text: 'menu.home'.tr(),
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: Навигация на главную
+                },
+              ),
+              const SizedBox(height: AppSizes.paddingSmall),
+              _buildDrawerMenuItem(
+                text: 'menu.catalog'.tr(),
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: Навигация в каталог
+                },
+              ),
+              const SizedBox(height: AppSizes.paddingSmall),
+              _buildDrawerMenuItem(
+                text: 'menu.bookPlace'.tr(),
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: Навигация на бронирование
+                },
+              ),
+              const SizedBox(height: AppSizes.paddingMedium),
+            ],
+          ),
         ),
       ),
     );
@@ -1205,6 +1424,16 @@ class _HomePageState extends State<HomePage> {
           text,
           style: const TextStyle(fontSize: 16, color: AppColors.iconAndText),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFooterLink({required String text, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 14, color: Colors.white),
       ),
     );
   }
