@@ -13,8 +13,14 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.10+1
-  google_fonts: ^6.2.1
   easy_localization: ^3.0.8
+  url_launcher: ^6.3.1
+  http: ^1.2.0
+  yandex_mapkit: ^4.2.1
+  shared_preferences: ^2.2.2
+  flutter_dotenv: ^5.1.0
+  intl: ^0.20.2
+  flutter_datetime_picker_plus: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -27,25 +33,33 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/images/logos/main.png
     - assets/images/logos/logo.svg
     - assets/images/white_map.png
+    - assets/images/block1.png
+    - assets/images/block2.png
+    - assets/images/catalog.jpg
     - assets/icons/phone.svg
     - assets/icons/whatsapp.svg
     - assets/icons/menu.svg
+    - assets/icons/person.svg
+    - assets/icons/contacts/location.svg
+    - assets/icons/contacts/phone.svg
+    - assets/icons/contacts/mail.svg
+    - assets/icons/contacts/instagram.svg
+    - assets/icons/contacts/facebook.svg
     - assets/icons/benefits/1.svg
     - assets/icons/benefits/2.svg
     - assets/icons/benefits/3.svg
     - assets/icons/benefits/4.svg
+    - assets/icons/religions/003-islam.svg
+    - assets/icons/religions/christianity.svg
     - assets/translations/
 
   fonts:
     - family: Manrope
       fonts:
-        - asset: assets/fonts/Manrope-Thin.ttf
-          weight: 100
-        - asset: assets/fonts/Manrope-Light.ttf
-          weight: 300
         - asset: assets/fonts/Manrope-Regular.ttf
           weight: 400
         - asset: assets/fonts/Manrope-Medium.ttf
@@ -54,5 +68,3 @@ flutter:
           weight: 600
         - asset: assets/fonts/Manrope-Bold.ttf
           weight: 700
-        - asset: assets/fonts/Manrope-ExtraBold.ttf
-          weight: 800

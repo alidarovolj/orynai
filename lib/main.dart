@@ -1,11 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'constants.dart';
+import 'widgets/header.dart';
+import 'widgets/service_card.dart';
+import 'widgets/step_card.dart';
+import 'widgets/info_block.dart';
+import 'widgets/contacts_block.dart';
+import 'widgets/app_button.dart';
+import 'widgets/login_modal.dart';
+import 'services/auth_state_manager.dart';
+import 'services/api_service.dart';
+import 'pages/cemeteries_page.dart';
+import 'pages/catalog_page.dart';
 
 void main() async {
+  final appStartTime = DateTime.now();
+  print('═══════════════════════════════════════════════════');
+  print('🚀 [${_getTimestamp()}] APP START');
+  print('═══════════════════════════════════════════════════');
+
+  final bindingStart = DateTime.now();
   WidgetsFlutterBinding.ensureInitialized();
-  await EasyLocalization.ensureInitialized();
+  print(
+    '✅ [${_getTimestamp()}] WidgetsFlutterBinding: ${DateTime.now().difference(bindingStart).inMilliseconds}ms',
+  );
+
+  // Только критически важные инициализации - запускаем UI быстро
+  try {
+    final localizationStart = DateTime.now();
+    print('⏳ [${_getTimestamp()}] Starting EasyLocalization...');
+    await EasyLocalization.ensureInitialized();
+    final locTime = DateTime.now().difference(localizationStart).inMilliseconds;
+    print(
+      '✅ [${_getTimestamp()}] EasyLocalization: ${locTime}ms ${locTime > 1000 ? "⚠️ SLOW!" : ""}',
+    );
+  } catch (e) {
+    print('❌ [${_getTimestamp()}] Error initializing EasyLocalization: $e');
+  }
+
+  // Загрузка .env файла
+  try {
+    final envStart = DateTime.now();
+    print('⏳ [${_getTimestamp()}] Loading .env...');
+    await dotenv.load();
+    final envTime = DateTime.now().difference(envStart).inMilliseconds;
+    print('✅ [${_getTimestamp()}] .env loaded: ${envTime}ms');
+  } catch (e) {
+    print('⚠️  [${_getTimestamp()}] .env not found, using defaults');
+    dotenv.env['API_URL'] = 'https://stage.ripservice.kz';
+  }
+
+  final totalInitTime = DateTime.now().difference(appStartTime).inMilliseconds;
+  print('═══════════════════════════════════════════════════');
+  print('🎯 [${_getTimestamp()}] MAIN INIT COMPLETE: ${totalInitTime}ms');
+  print('═══════════════════════════════════════════════════');
+
+  // Запускаем приложение сразу
+  final runAppStart = DateTime.now();
+  print('⏳ [${_getTimestamp()}] Running app...');
+
+  // Отключаем debug логи EasyLocalization для ускорения
+  EasyLocalization.logger.enableLevels = [];
 
   runApp(
     EasyLocalization(
@@ -13,16 +71,88 @@ void main() async {
       path: 'assets/translations',
       fallbackLocale: const Locale('kk'),
       startLocale: const Locale('kk'),
+      useOnlyLangCode: true,
+      assetLoader:
+          const RootBundleAssetLoader(), // Используем встроенный загрузчик
       child: const MyApp(),
     ),
   );
+  print(
+    '✅ [${_getTimestamp()}] runApp called: ${DateTime.now().difference(runAppStart).inMilliseconds}ms',
+  );
+
+  // Инициализируем тяжелые сервисы асинхронно в фоне после запуска UI
+  _initializeServicesInBackground();
 }
 
-class MyApp extends StatelessWidget {
+String _getTimestamp() {
+  final now = DateTime.now();
+  return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}';
+}
+
+// Асинхронная инициализация тяжелых сервисов
+Future<void> _initializeServicesInBackground() async {
+  print('═══════════════════════════════════════════════════');
+  print('🔄 [${_getTimestamp()}] BACKGROUND SERVICES INIT START');
+  print('═══════════════════════════════════════════════════');
+
+  // Инициализация API сервиса
+  try {
+    final apiStart = DateTime.now();
+    print('⏳ [${_getTimestamp()}] Initializing API service...');
+    await ApiService().initialize();
+    final apiTime = DateTime.now().difference(apiStart).inMilliseconds;
+    print(
+      '✅ [${_getTimestamp()}] API service: ${apiTime}ms ${apiTime > 1000 ? "⚠️ SLOW!" : ""}',
+    );
+  } catch (e) {
+    print('❌ [${_getTimestamp()}] Error initializing API service: $e');
+  }
+
+  // Инициализация авторизации
+  try {
+    final authStart = DateTime.now();
+    print('⏳ [${_getTimestamp()}] Initializing AuthStateManager...');
+    await AuthStateManager().initialize();
+    final authTime = DateTime.now().difference(authStart).inMilliseconds;
+    print(
+      '✅ [${_getTimestamp()}] AuthStateManager: ${authTime}ms ${authTime > 1000 ? "⚠️ SLOW!" : ""}',
+    );
+  } catch (e) {
+    print('❌ [${_getTimestamp()}] Error initializing AuthStateManager: $e');
+  }
+
+  print('═══════════════════════════════════════════════════');
+  print('✅ [${_getTimestamp()}] BACKGROUND SERVICES COMPLETE');
+  print('═══════════════════════════════════════════════════');
+}
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() {
+    print('🔨 [${_getTimestamp()}] MyApp createState');
+    return _MyAppState();
+  }
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    print('🔧 [${_getTimestamp()}] MyApp initState');
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print('🔄 [${_getTimestamp()}] MyApp didChangeDependencies');
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print('🏗️  [${_getTimestamp()}] MyApp build started');
     return MaterialApp(
       title: 'Orynai',
       localizationsDelegates: context.localizationDelegates,
@@ -69,17 +199,25 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _isScrolled = false;
   final ScrollController _scrollController = ScrollController();
+  String? _openTooltipId; // ID открытой подсказки
 
   @override
   void initState() {
     super.initState();
+    print('═══════════════════════════════════════════════════');
+    print('🏠 [${_getTimestamp()}] HomePage initState');
+    print('═══════════════════════════════════════════════════');
     _scrollController.addListener(_onScroll);
+    // Устанавливаем черный статус-бар для белого фона
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    // Восстанавливаем стандартный стиль статус-бара
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
     super.dispose();
   }
 
@@ -89,31 +227,136 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isScrolled = isScrolled;
       });
+      // Статус-бар всегда черный для белого фона
+      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+    }
+  }
+
+  Future<void> _openPhone() async {
+    final Uri phoneUrl = Uri.parse('tel:+77758100110');
+    try {
+      if (await canLaunchUrl(phoneUrl)) {
+        await launchUrl(phoneUrl);
+      }
+    } catch (e) {
+      // Обработка ошибки
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('errors.phoneNotAvailable'.tr())),
+        );
+      }
+    }
+  }
+
+  Future<void> _openWhatsApp() async {
+    final Uri whatsappUrl = Uri.parse(
+      'https://api.whatsapp.com/send/?phone=77758100110&text&type=phone_number&app_absent=0',
+    );
+    try {
+      if (await canLaunchUrl(whatsappUrl)) {
+        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+      } else {
+        // Если не удалось открыть, пробуем альтернативный способ
+        final Uri fallbackUrl = Uri.parse('https://wa.me/77758100110');
+        if (await canLaunchUrl(fallbackUrl)) {
+          await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
+        }
+      }
+    } catch (e) {
+      // Обработка ошибки
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('errors.whatsappNotAvailable'.tr())),
+        );
+      }
+    }
+  }
+
+  Future<void> _openInstagram() async {
+    final Uri instagramUrl = Uri.parse(
+      'https://www.instagram.com/ripservice.kz/',
+    );
+    try {
+      if (await canLaunchUrl(instagramUrl)) {
+        await launchUrl(instagramUrl, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      // Обработка ошибки
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
+      }
+    }
+  }
+
+  Future<void> _openFacebook() async {
+    final Uri facebookUrl = Uri.parse(
+      'https://www.facebook.com/Orynai.kz/?rdid=fJcYNJaX2yFSqTvr',
+    );
+    try {
+      if (await canLaunchUrl(facebookUrl)) {
+        await launchUrl(facebookUrl, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      // Обработка ошибки
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
+      }
+    }
+  }
+
+  Future<void> _openEmail() async {
+    final Uri emailUrl = Uri.parse('mailto:info@orynai.kz');
+    try {
+      if (await canLaunchUrl(emailUrl)) {
+        await launchUrl(emailUrl);
+      }
+    } catch (e) {
+      // Обработка ошибки
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('errors.emailNotAvailable'.tr())),
+        );
+      }
+    }
+  }
+
+  Future<void> _open2GIS() async {
+    final Uri gisUrl = Uri.parse(
+      'https://2gis.kz/almaty/firm/9429940000792308?m=76.915711%2C43.237625%2F16',
+    );
+    try {
+      if (await canLaunchUrl(gisUrl)) {
+        await launchUrl(gisUrl, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      // Обработка ошибки
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final headerColor = _isScrolled
-        ? AppColors.headerScrolled
-        : Colors.transparent;
-    final iconColor = _isScrolled ? Colors.white : AppColors.iconAndText;
-    final safeAreaColor = _isScrolled
-        ? AppColors.headerScrolled
-        : AppColors.background;
-
-    return Scaffold(
+    print('🎨 [${_getTimestamp()}] HomePage build started');
+    final buildStart = DateTime.now();
+    final scaffold = Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Верхняя SafeArea с изменяющимся цветом
+          // Верхняя SafeArea белого цвета
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              color: safeAreaColor,
+            child: Container(
+              color: Colors.white,
               height: MediaQuery.of(context).padding.top,
             ),
           ),
@@ -123,73 +366,25 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: [
                 // Заголовок с иконками
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  color: headerColor,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.paddingMedium,
-                    vertical: 12.0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Логотип в левом верхнем углу
-                      SvgPicture.asset(
-                        'assets/images/logos/logo.svg',
-                        width: AppSizes.headerLogoSize,
-                        height: AppSizes.headerLogoSize,
-                        colorFilter: ColorFilter.mode(
-                          iconColor,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      // Иконки справа
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: SvgPicture.asset(
-                              'assets/icons/phone.svg',
-                              width: 24,
-                              height: 24,
-                              colorFilter: ColorFilter.mode(
-                                iconColor,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                            onPressed: () {},
-                          ),
-                          IconButton(
-                            icon: SvgPicture.asset(
-                              'assets/icons/whatsapp.svg',
-                              width: 24,
-                              height: 24,
-                              colorFilter: ColorFilter.mode(
-                                iconColor,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                            onPressed: () {},
-                          ),
-                          Builder(
-                            builder: (context) => IconButton(
-                              icon: SvgPicture.asset(
-                                'assets/icons/menu.svg',
-                                width: 24,
-                                height: 24,
-                                colorFilter: ColorFilter.mode(
-                                  iconColor,
-                                  BlendMode.srcIn,
-                                ),
-                              ),
-                              onPressed: () {
-                                _showMenuModal(context);
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                AppHeader(
+                  isScrolled: _isScrolled,
+                  onProfileTap: () {
+                    final authManager = AuthStateManager();
+                    if (!authManager.isAuthenticated) {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) => const LoginModal(),
+                      ).then((result) {
+                        if (result != null) {
+                          setState(() {
+                            // Обновляем UI после авторизации
+                          });
+                        }
+                      });
+                    }
+                  },
                 ),
                 // Основной контент с прокруткой
                 Expanded(
@@ -214,6 +409,12 @@ class _HomePageState extends State<HomePage> {
                                       child: Image.asset(
                                         'assets/images/white_map.png',
                                         fit: BoxFit.contain,
+                                        cacheWidth:
+                                            400, // Уменьшаем разрешение для фона
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Container();
+                                            },
                                       ),
                                     ),
                                   ),
@@ -232,6 +433,14 @@ class _HomePageState extends State<HomePage> {
                                         'assets/images/logos/main.png',
                                         height: AppSizes.mainLogoHeight,
                                         fit: BoxFit.contain,
+                                        cacheHeight:
+                                            200, // Кэширование с оптимальным размером
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Container(
+                                                height: AppSizes.mainLogoHeight,
+                                              );
+                                            },
                                       ),
                                     ),
                                     // Описательный текст
@@ -249,11 +458,9 @@ class _HomePageState extends State<HomePage> {
                                     Column(
                                       children: [
                                         // Первая кнопка - "Маманға қоңырау шалу"
-                                        _buildAppButton(
+                                        AppButton(
                                           text: 'buttons.callSpecialist'.tr(),
-                                          onPressed: () {
-                                            // TODO: Реализовать звонок специалисту
-                                          },
+                                          onPressed: _openWhatsApp,
                                           backgroundColor:
                                               AppColors.buttonBackground,
                                         ),
@@ -261,7 +468,7 @@ class _HomePageState extends State<HomePage> {
                                           height: AppSizes.paddingMedium,
                                         ),
                                         // Вторая кнопка - "Жерлеуді ұйымдастыру"
-                                        _buildAppButton(
+                                        AppButton(
                                           text: 'buttons.organizeFuneral'.tr(),
                                           onPressed: () {
                                             // TODO: Реализовать организацию похорон
@@ -287,39 +494,106 @@ class _HomePageState extends State<HomePage> {
                           child: Column(
                             children: [
                               const SizedBox(height: AppSizes.paddingLarge),
-                              _buildServiceCard(
+                              ServiceCard(
                                 iconPath: 'assets/icons/benefits/1.svg',
                                 title: 'services.placeBooking.title'.tr(),
                                 description: 'services.placeBooking.description'
                                     .tr(),
                                 buttonText: 'buttons.go'.tr(),
+                                tooltipKey: 'placeBooking',
+                                tooltipText: 'services.placeBooking.tooltip'
+                                    .tr(),
+                                openTooltipId: _openTooltipId,
+                                onInfoTap: () {
+                                  setState(() {
+                                    if (_openTooltipId == 'placeBooking') {
+                                      _openTooltipId = null;
+                                    } else {
+                                      _openTooltipId = 'placeBooking';
+                                    }
+                                  });
+                                },
+                                onButtonPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const CemeteriesPage(),
+                                    ),
+                                  );
+                                },
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
-                              _buildServiceCard(
+                              ServiceCard(
                                 iconPath: 'assets/icons/benefits/2.svg',
                                 title: 'services.memorial.title'.tr(),
                                 description: 'services.memorial.description'
                                     .tr(),
                                 buttonText: 'buttons.go'.tr(),
                                 showInfoText: true,
+                                tooltipKey: 'memorial',
+                                tooltipText: 'services.memorial.tooltip'.tr(),
+                                openTooltipId: _openTooltipId,
+                                onInfoTap: () {
+                                  setState(() {
+                                    if (_openTooltipId == 'memorial') {
+                                      _openTooltipId = null;
+                                    } else {
+                                      _openTooltipId = 'memorial';
+                                    }
+                                  });
+                                },
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
-                              _buildServiceCard(
+                              ServiceCard(
                                 iconPath: 'assets/icons/benefits/3.svg',
                                 title: 'services.goodsAndServices.title'.tr(),
                                 description:
                                     'services.goodsAndServices.description'
                                         .tr(),
                                 buttonText: 'buttons.go'.tr(),
+                                tooltipKey: 'goodsAndServices',
+                                tooltipText: 'services.goodsAndServices.tooltip'
+                                    .tr(),
+                                openTooltipId: _openTooltipId,
+                                onInfoTap: () {
+                                  setState(() {
+                                    if (_openTooltipId == 'goodsAndServices') {
+                                      _openTooltipId = null;
+                                    } else {
+                                      _openTooltipId = 'goodsAndServices';
+                                    }
+                                  });
+                                },
+                                onButtonPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const CatalogPage(),
+                                    ),
+                                  );
+                                },
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
-                              _buildServiceCard(
+                              ServiceCard(
                                 iconPath: 'assets/icons/benefits/4.svg',
                                 title: 'services.findBurial.title'.tr(),
                                 description: 'services.findBurial.description'
                                     .tr(),
                                 buttonText: 'buttons.search'.tr(),
                                 showInfoText: true,
+                                tooltipKey: 'findBurial',
+                                tooltipText: 'services.findBurial.tooltip'.tr(),
+                                openTooltipId: _openTooltipId,
+                                onInfoTap: () {
+                                  setState(() {
+                                    if (_openTooltipId == 'findBurial') {
+                                      _openTooltipId = null;
+                                    } else {
+                                      _openTooltipId = 'findBurial';
+                                    }
+                                  });
+                                },
                               ),
                               const SizedBox(height: AppSizes.paddingXLarge),
                             ],
@@ -346,7 +620,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               const SizedBox(height: 32),
                               // Карточки с шагами
-                              _buildStepCard(
+                              StepCard(
                                 title: 'steps.step1.title'.tr(),
                                 paragraphs: [
                                   'steps.step1.paragraph1'.tr(),
@@ -356,9 +630,10 @@ class _HomePageState extends State<HomePage> {
                                 buttonColor: AppColors.buttonBackground,
                                 buttonIcon: Icons.phone,
                                 isPhoneIcon: true,
+                                onPhoneTap: _openPhone,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
-                              _buildStepCard(
+                              StepCard(
                                 title: 'steps.step2.title'.tr(),
                                 paragraphs: [
                                   'steps.step2.paragraph1'.tr(),
@@ -368,9 +643,10 @@ class _HomePageState extends State<HomePage> {
                                 buttonColor: AppColors.buttonBackground,
                                 buttonIcon: Icons.phone,
                                 isPhoneIcon: true,
+                                onPhoneTap: _openPhone,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
-                              _buildStepCard(
+                              StepCard(
                                 title: 'steps.step3.title'.tr(),
                                 paragraphs: [
                                   'steps.step3.paragraph1'.tr(),
@@ -380,26 +656,30 @@ class _HomePageState extends State<HomePage> {
                                 buttonColor: AppColors.buttonGreen,
                                 buttonIcon: Icons.chat,
                                 isWhatsApp: true,
+                                onWhatsAppTap: _openWhatsApp,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
-                              _buildStepCard(
+                              StepCard(
                                 title: 'steps.step4.title'.tr(),
                                 paragraphs: [
                                   'steps.step4.paragraph1'.tr(),
                                   'steps.step4.paragraph2'.tr(),
                                 ],
-                                buttonText: 'buttons.placeOrder'.tr(),
+                                buttonText: 'buttons.order'.tr(),
                                 buttonColor: AppColors.buttonBackground,
                                 buttonIcon: Icons.phone,
                                 isPhoneIcon: true,
                                 hasSecondButton: true,
-                                secondButtonText: 'buttons.placeOrder'.tr(),
+                                secondButtonText: 'buttons.order'.tr(),
                                 secondButtonColor: AppColors.buttonGreen,
                                 secondButtonIcon: Icons.chat,
                                 isSecondButtonWhatsApp: true,
+                                buttonsInRow: true,
+                                onPhoneTap: _openPhone,
+                                onWhatsAppTap: _openWhatsApp,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
-                              _buildStepCard(
+                              StepCard(
                                 title: 'steps.step5.title'.tr(),
                                 paragraphs: [
                                   'steps.step5.paragraph1'.tr(),
@@ -409,9 +689,10 @@ class _HomePageState extends State<HomePage> {
                                 buttonColor: AppColors.buttonGreen,
                                 buttonIcon: Icons.chat,
                                 isWhatsApp: true,
+                                onWhatsAppTap: _openWhatsApp,
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
-                              _buildStepCard(
+                              StepCard(
                                 title: 'steps.step6.title'.tr(),
                                 paragraphs: [
                                   'steps.step6.paragraph1'.tr(),
@@ -421,6 +702,7 @@ class _HomePageState extends State<HomePage> {
                                 buttonColor: AppColors.buttonGreen,
                                 buttonIcon: Icons.chat,
                                 isWhatsApp: true,
+                                onWhatsAppTap: _openWhatsApp,
                               ),
                               const SizedBox(height: AppSizes.paddingXLarge),
                             ],
@@ -480,11 +762,9 @@ class _HomePageState extends State<HomePage> {
                                       AppSizes.paddingMedium,
                                       AppSizes.paddingLarge,
                                     ),
-                                    child: _buildAppButton(
+                                    child: AppButton(
                                       text: 'buttons.freeConsultation'.tr(),
-                                      onPressed: () {
-                                        // TODO: Реализовать действие
-                                      },
+                                      onPressed: _openWhatsApp,
                                       backgroundColor:
                                           AppColors.buttonBackground,
                                     ),
@@ -495,6 +775,90 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(height: AppSizes.paddingXLarge),
                           ],
                         ),
+                        // Блоки полезной информации
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.paddingMedium,
+                          ),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: AppSizes.paddingXLarge),
+                              // Заголовок "Полезная информация"
+                              Text(
+                                'info.usefulInfo'.tr(),
+                                textAlign: TextAlign.left,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.iconAndText,
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.paddingLarge),
+                              // Первый блок - Стоимость похорон
+                              InfoBlock(
+                                backgroundImage: 'assets/images/block1.png',
+                                title: 'infoBlocks.funeralCost.title'.tr(),
+                                description:
+                                    'infoBlocks.funeralCost.description'.tr(),
+                                buttonText: 'infoBlocks.funeralCost.button'
+                                    .tr(),
+                                onButtonPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const CatalogPage(),
+                                    ),
+                                  );
+                                },
+                                tooltipKey: 'funeralCost',
+                                tooltipText: 'infoBlocks.funeralCost.tooltip'
+                                    .tr(),
+                                openTooltipId: _openTooltipId,
+                                onInfoTap: () {
+                                  setState(() {
+                                    if (_openTooltipId == 'funeralCost') {
+                                      _openTooltipId = null;
+                                    } else {
+                                      _openTooltipId = 'funeralCost';
+                                    }
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: AppSizes.paddingMedium),
+                              // Второй блок - Обращение в акимат
+                              InfoBlock(
+                                backgroundImage: 'assets/images/block2.png',
+                                title: 'infoBlocks.akimatAppeal.title'.tr(),
+                                description:
+                                    'infoBlocks.akimatAppeal.description'.tr(),
+                                buttonText: 'infoBlocks.akimatAppeal.button'
+                                    .tr(),
+                                onButtonPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const CatalogPage(),
+                                    ),
+                                  );
+                                },
+                                tooltipKey: 'akimatAppeal',
+                                tooltipText: 'infoBlocks.akimatAppeal.tooltip'
+                                    .tr(),
+                                openTooltipId: _openTooltipId,
+                                onInfoTap: () {
+                                  setState(() {
+                                    if (_openTooltipId == 'akimatAppeal') {
+                                      _openTooltipId = null;
+                                    } else {
+                                      _openTooltipId = 'akimatAppeal';
+                                    }
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: AppSizes.paddingXLarge),
+                            ],
+                          ),
+                        ),
                         // Блок контактов
                         Padding(
                           padding: const EdgeInsets.symmetric(
@@ -503,208 +867,12 @@ class _HomePageState extends State<HomePage> {
                           child: Column(
                             children: [
                               const SizedBox(height: AppSizes.paddingXLarge),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(
-                                    AppSizes.buttonBorderRadius,
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    const SizedBox(
-                                      height: AppSizes.paddingXLarge,
-                                    ),
-                                    // Заголовок
-                                    Text(
-                                      'contacts.title'.tr(),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.iconAndText,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingSmall,
-                                    ),
-                                    // Подзаголовок
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppSizes.paddingMedium,
-                                      ),
-                                      child: Text(
-                                        'contacts.subtitle'.tr(),
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: AppColors.iconAndText,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingXLarge,
-                                    ),
-                                    // Адрес
-                                    Icon(
-                                      Icons.location_on_outlined,
-                                      size: 32,
-                                      color: AppColors.iconAndText,
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingSmall,
-                                    ),
-                                    Text(
-                                      'contacts.city'.tr(),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.iconAndText,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingSmall,
-                                    ),
-                                    Text(
-                                      'contacts.address'.tr(),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.iconAndText,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingLarge,
-                                    ),
-                                    // Разделительная линия
-                                    Divider(
-                                      color: AppColors.accordionBorder,
-                                      thickness: 1,
-                                      height: 1,
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingLarge,
-                                    ),
-                                    // Телефон
-                                    Icon(
-                                      Icons.phone_outlined,
-                                      size: 32,
-                                      color: AppColors.iconAndText,
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingSmall,
-                                    ),
-                                    Text(
-                                      'contacts.phone'.tr(),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.iconAndText,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingMedium,
-                                    ),
-                                    // Социальные сети
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        IconButton(
-                                          icon: Container(
-                                            width: 24,
-                                            height: 24,
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
-                                                color: AppColors.iconAndText,
-                                                width: 1.5,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Center(
-                                              child: Container(
-                                                width: 12,
-                                                height: 12,
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                    color:
-                                                        AppColors.iconAndText,
-                                                    width: 1.5,
-                                                  ),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Center(
-                                                  child: Container(
-                                                    width: 3,
-                                                    height: 3,
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                          color: AppColors
-                                                              .iconAndText,
-                                                          shape:
-                                                              BoxShape.circle,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            // TODO: Открыть Instagram
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.facebook,
-                                            color: AppColors.iconAndText,
-                                          ),
-                                          onPressed: () {
-                                            // TODO: Открыть Facebook
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingLarge,
-                                    ),
-                                    // Разделительная линия
-                                    Divider(
-                                      color: AppColors.accordionBorder,
-                                      thickness: 1,
-                                      height: 1,
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingLarge,
-                                    ),
-                                    // Email
-                                    Icon(
-                                      Icons.email_outlined,
-                                      size: 32,
-                                      color: AppColors.iconAndText,
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingSmall,
-                                    ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        // TODO: Открыть email
-                                      },
-                                      child: Text(
-                                        'contacts.email'.tr(),
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: AppColors.iconAndText,
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: AppSizes.paddingXLarge,
-                                    ),
-                                  ],
-                                ),
+                              ContactsBlock(
+                                onLocationTap: _open2GIS,
+                                onPhoneTap: _openPhone,
+                                onEmailTap: _openEmail,
+                                onInstagramTap: _openInstagram,
+                                onFacebookTap: _openFacebook,
                               ),
                               const SizedBox(height: AppSizes.paddingXLarge),
                             ],
@@ -722,23 +890,29 @@ class _HomePageState extends State<HomePage> {
                                 children: [
                                   // Навигационные ссылки
                                   _buildFooterLink(
-                                    text: 'Біз туралы',
+                                    text: 'footer.aboutUs'.tr(),
                                     onTap: () {
                                       // TODO: Навигация на "О нас"
                                     },
                                   ),
                                   const SizedBox(height: AppSizes.paddingSmall),
                                   _buildFooterLink(
-                                    text: 'Мақалалар',
+                                    text: 'footer.articles'.tr(),
                                     onTap: () {
                                       // TODO: Навигация на "Статьи"
                                     },
                                   ),
                                   const SizedBox(height: AppSizes.paddingSmall),
                                   _buildFooterLink(
-                                    text: 'Қазақстан зираттары',
+                                    text: 'footer.cemeteries'.tr(),
                                     onTap: () {
-                                      // TODO: Навигация на "Кладбища Казахстана"
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const CemeteriesPage(),
+                                        ),
+                                      );
                                     },
                                   ),
                                   const SizedBox(
@@ -746,21 +920,27 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   // Ссылки на услуги/политику
                                   _buildFooterLink(
-                                    text: 'Көмек',
+                                    text: 'footer.help'.tr(),
                                     onTap: () {
                                       // TODO: Навигация на "Помощь"
                                     },
                                   ),
                                   const SizedBox(height: AppSizes.paddingSmall),
                                   _buildFooterLink(
-                                    text: 'Тауарлар мен қызметтер',
+                                    text: 'footer.goodsAndServices'.tr(),
                                     onTap: () {
-                                      // TODO: Навигация на "Товары и услуги"
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const CatalogPage(),
+                                        ),
+                                      );
                                     },
                                   ),
                                   const SizedBox(height: AppSizes.paddingSmall),
                                   _buildFooterLink(
-                                    text: 'Құпиялық саясаты',
+                                    text: 'footer.privacyPolicy'.tr(),
                                     onTap: () {
                                       // TODO: Навигация на "Политика конфиденциальности"
                                     },
@@ -770,7 +950,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   // Контактная информация
                                   Text(
-                                    'Алматы, Қазақстан',
+                                    'footer.city'.tr(),
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
@@ -778,7 +958,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   const SizedBox(height: AppSizes.paddingSmall),
                                   Text(
-                                    '+7 (775) 810-01-10',
+                                    'contacts.phone'.tr(),
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
@@ -790,7 +970,7 @@ class _HomePageState extends State<HomePage> {
                                       // TODO: Открыть email
                                     },
                                     child: Text(
-                                      'info@orynai.kz',
+                                      'contacts.email'.tr(),
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white,
@@ -887,546 +1067,12 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-
-  Widget _buildStepCard({
-    required String title,
-    required List<String> paragraphs,
-    required String buttonText,
-    required Color buttonColor,
-    required IconData buttonIcon,
-    bool isPhoneIcon = false,
-    bool isWhatsApp = false,
-    bool hasSecondButton = false,
-    String? secondButtonText,
-    Color? secondButtonColor,
-    IconData? secondButtonIcon,
-    bool isSecondButtonWhatsApp = false,
-  }) {
-    return ExpansionTile(
-      tilePadding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.paddingMedium,
-        vertical: AppSizes.paddingSmall,
-      ),
-      childrenPadding: const EdgeInsets.fromLTRB(
-        AppSizes.paddingMedium,
-        0,
-        AppSizes.paddingMedium,
-        AppSizes.paddingMedium,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius),
-        side: const BorderSide(color: AppColors.accordionBorder, width: 1),
-      ),
-      collapsedShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius),
-        side: const BorderSide(color: AppColors.accordionBorder, width: 1),
-      ),
-      backgroundColor: Colors.white,
-      collapsedBackgroundColor: Colors.white,
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-          color: AppColors.iconAndText,
-        ),
-      ),
-      iconColor: AppColors.iconAndText,
-      collapsedIconColor: AppColors.iconAndText,
-      children: [
-        // Текст параграфов
-        ...paragraphs.map(
-          (paragraph) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-            child: Text(
-              paragraph,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.iconAndText,
-                height: 1.5,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        // Кнопки
-        if (hasSecondButton &&
-            secondButtonText != null &&
-            secondButtonColor != null &&
-            secondButtonIcon != null)
-          Column(
-            children: [
-              _buildActionButton(
-                text: buttonText,
-                color: buttonColor,
-                icon: buttonIcon,
-                isPhoneIcon: isPhoneIcon,
-                isWhatsApp: false,
-              ),
-              const SizedBox(height: AppSizes.paddingMedium),
-              _buildActionButton(
-                text: secondButtonText,
-                color: secondButtonColor,
-                icon: secondButtonIcon,
-                isPhoneIcon: false,
-                isWhatsApp: isSecondButtonWhatsApp,
-              ),
-            ],
-          )
-        else
-          _buildActionButton(
-            text: buttonText,
-            color: buttonColor,
-            icon: buttonIcon,
-            isPhoneIcon: isPhoneIcon,
-            isWhatsApp: isWhatsApp,
-          ),
-      ],
+    print(
+      '✅ [${_getTimestamp()}] HomePage build complete: ${DateTime.now().difference(buildStart).inMilliseconds}ms',
     );
+    return scaffold;
   }
 
-  // Глобальный виджет для унифицированных кнопок
-  Widget _buildAppButton({
-    required String text,
-    required VoidCallback onPressed,
-    Color? backgroundColor,
-    Color? foregroundColor,
-    Color? borderColor,
-    double? borderWidth,
-    Widget? icon,
-    bool isOutlined = false,
-    double? fontSize,
-    EdgeInsets? padding,
-    double? height,
-  }) {
-    final buttonPadding = padding ?? const EdgeInsets.symmetric(vertical: 14);
-    final buttonFontSize = fontSize ?? 14.0;
-    final buttonHeight = height ?? AppSizes.buttonHeight;
-
-    if (isOutlined) {
-      return SizedBox(
-        width: double.infinity,
-        height: buttonHeight,
-        child: OutlinedButton(
-          onPressed: onPressed,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: foregroundColor ?? AppColors.border,
-            padding: buttonPadding,
-            side: BorderSide(
-              color: borderColor ?? AppColors.border,
-              width: borderWidth ?? 1.5,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                icon,
-                const SizedBox(width: AppSizes.paddingSmall),
-              ],
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: buttonFontSize,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else {
-      return SizedBox(
-        width: double.infinity,
-        height: buttonHeight,
-        child: ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundColor ?? AppColors.buttonBackground,
-            foregroundColor: foregroundColor ?? Colors.white,
-            padding: buttonPadding,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                icon,
-                const SizedBox(width: AppSizes.paddingSmall),
-              ],
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: buttonFontSize,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget _buildActionButton({
-    required String text,
-    required Color color,
-    required IconData icon,
-    bool isPhoneIcon = false,
-    bool isWhatsApp = false,
-  }) {
-    Widget? iconWidget;
-    if (isWhatsApp) {
-      iconWidget = SvgPicture.asset(
-        'assets/icons/whatsapp.svg',
-        width: 20,
-        height: 20,
-        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-      );
-    } else {
-      iconWidget = Icon(
-        icon,
-        size: 20,
-        color: isPhoneIcon ? AppColors.iconAndText : Colors.white,
-      );
-    }
-
-    return _buildAppButton(
-      text: text,
-      onPressed: () {
-        // TODO: Реализовать действие
-      },
-      backgroundColor: color,
-      icon: iconWidget,
-      fontSize: 13,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    );
-  }
-
-  Widget _buildServiceCard({
-    required String iconPath,
-    required String title,
-    required String description,
-    required String buttonText,
-    bool showInfoText = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.paddingLarge),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.iconAndText,
-        borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Иконка
-          SvgPicture.asset(iconPath, width: 50, height: 50),
-          const SizedBox(height: AppSizes.paddingMedium),
-          // Заголовок
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Описание
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Кнопка и информационная иконка
-          Row(
-            children: [
-              Expanded(
-                child: _buildAppButton(
-                  text: buttonText,
-                  onPressed: () {
-                    // TODO: Реализовать навигацию
-                  },
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.iconAndText,
-                ),
-              ),
-              const SizedBox(width: AppSizes.paddingSmall),
-              // Информационная иконка
-              GestureDetector(
-                onTap: () {
-                  // TODO: Показать информацию
-                },
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'i',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.iconAndText,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              if (showInfoText) ...[
-                const SizedBox(width: AppSizes.paddingSmall),
-                Text(
-                  'services.memorial.howItWorks'.tr(),
-                  style: const TextStyle(fontSize: 12, color: Colors.white),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showMenuModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.paddingMedium),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Переключатель языка
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: AppColors.accordionBorder.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Builder(
-                        builder: (context) {
-                          final isSelected =
-                              context.locale.languageCode == 'ru';
-                          return GestureDetector(
-                            onTap: () {
-                              context.setLocale(const Locale('ru'));
-                              Navigator.pop(context);
-                              _showMenuModal(context);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppSizes.paddingSmall,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'РУ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isSelected
-                                      ? AppColors.iconAndText
-                                      : AppColors.accordionBorder,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: Builder(
-                        builder: (context) {
-                          final isSelected =
-                              context.locale.languageCode == 'kk';
-                          return GestureDetector(
-                            onTap: () {
-                              context.setLocale(const Locale('kk'));
-                              Navigator.pop(context);
-                              _showMenuModal(context);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppSizes.paddingSmall,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'ҚАЗ',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isSelected
-                                      ? AppColors.iconAndText
-                                      : AppColors.accordionBorder,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSizes.paddingXLarge),
-              // Секция "КЛИЕНТТЕРГЕ"
-              Text(
-                'menu.forClients'.tr(),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.accordionBorder,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: AppSizes.paddingSmall),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  Icons.person_outline,
-                  color: AppColors.iconAndText,
-                ),
-                title: Text(
-                  'menu.loginRegister'.tr(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.iconAndText,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Реализовать вход/регистрацию
-                },
-              ),
-              const SizedBox(height: AppSizes.paddingMedium),
-              // Разделитель
-              Divider(
-                color: AppColors.accordionBorder,
-                thickness: 1,
-                height: 1,
-              ),
-              const SizedBox(height: AppSizes.paddingMedium),
-              // Секция "СЕРІКТЕСТЕРГЕ"
-              Text(
-                'menu.forPartners'.tr(),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.accordionBorder,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: AppSizes.paddingSmall),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  Icons.business_outlined,
-                  color: AppColors.iconAndText,
-                ),
-                title: Text(
-                  'menu.loginAsProvider'.tr(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.iconAndText,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Реализовать вход для партнеров
-                },
-              ),
-              const SizedBox(height: AppSizes.paddingLarge),
-              // Разделитель
-              Divider(
-                color: AppColors.accordionBorder,
-                thickness: 1,
-                height: 1,
-              ),
-              const SizedBox(height: AppSizes.paddingLarge),
-              // Навигационные ссылки
-              _buildDrawerMenuItem(
-                text: 'menu.home'.tr(),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Навигация на главную
-                },
-              ),
-              const SizedBox(height: AppSizes.paddingSmall),
-              _buildDrawerMenuItem(
-                text: 'menu.catalog'.tr(),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Навигация в каталог
-                },
-              ),
-              const SizedBox(height: AppSizes.paddingSmall),
-              _buildDrawerMenuItem(
-                text: 'menu.bookPlace'.tr(),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Навигация на бронирование
-                },
-              ),
-              const SizedBox(height: AppSizes.paddingMedium),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerMenuItem({
-    required String text,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingSmall),
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 16, color: AppColors.iconAndText),
-        ),
-      ),
-    );
-  }
 
   Widget _buildFooterLink({required String text, required VoidCallback onTap}) {
     return InkWell(
