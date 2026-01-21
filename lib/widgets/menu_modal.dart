@@ -8,6 +8,7 @@ import '../pages/catalog_page.dart';
 import '../pages/cart_page.dart';
 import '../pages/cemeteries_page.dart';
 import '../pages/profile_page.dart';
+import '../pages/about_page.dart';
 
 class MenuModal extends StatelessWidget {
   const MenuModal({super.key});
@@ -309,6 +310,19 @@ class MenuModal extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const CemeteriesPage(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: AppSizes.paddingSmall),
+            _buildDrawerMenuItem(
+              text: 'footer.aboutUs'.tr(),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AboutPage(),
                   ),
                 );
               },

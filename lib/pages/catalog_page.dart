@@ -11,6 +11,7 @@ import '../widgets/login_modal.dart';
 import '../widgets/support_block.dart';
 import '../pages/cemeteries_page.dart';
 import '../pages/products_page.dart';
+import '../pages/about_page.dart';
 
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
@@ -238,7 +239,13 @@ class _CatalogPageState extends State<CatalogPage> {
                                         _buildFooterLink(
                                           text: 'footer.aboutUs'.tr(),
                                           onTap: () {
-                                            // TODO: Навигация на "О нас"
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const AboutPage(),
+                                              ),
+                                            );
                                           },
                                         ),
                                         const SizedBox(

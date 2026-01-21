@@ -243,9 +243,16 @@ class ApiService {
         final errorBody = response.body.isNotEmpty
             ? json.decode(response.body) as Map<String, dynamic>
             : {'error': 'Request failed with status ${response.statusCode}'};
+        
+        // Извлекаем сообщение об ошибке из разных возможных полей
+        final errorMessage = errorBody['message'] ?? 
+                            errorBody['description'] ?? 
+                            errorBody['error'] ?? 
+                            'Unknown error';
+        
         throw ApiException(
           statusCode: response.statusCode,
-          message: errorBody['description'] ?? errorBody['error'] ?? 'Unknown error',
+          message: errorMessage.toString(),
           body: errorBody,
         );
       }
@@ -303,9 +310,16 @@ class ApiService {
         final errorBody = response.body.isNotEmpty
             ? json.decode(response.body) as Map<String, dynamic>
             : {'error': 'Request failed with status ${response.statusCode}'};
+        
+        // Извлекаем сообщение об ошибке из разных возможных полей
+        final errorMessage = errorBody['message'] ?? 
+                            errorBody['description'] ?? 
+                            errorBody['error'] ?? 
+                            'Unknown error';
+        
         throw ApiException(
           statusCode: response.statusCode,
-          message: errorBody['description'] ?? errorBody['error'] ?? 'Unknown error',
+          message: errorMessage.toString(),
           body: errorBody,
         );
       }
@@ -529,6 +543,140 @@ class ApiService {
       return {};
     } catch (e) {
       debugPrint('Error fetching current user: $e');
+      rethrow;
+    }
+  }
+
+  // Получение заказов пользователя
+  Future<Map<String, dynamic>> getOrders({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final response = await get(
+        '/api/v1/orders',
+        queryParameters: {
+          'page': page.toString(),
+          'limit': limit.toString(),
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {
+        'items': [],
+        'total_count': 0,
+        'page': page,
+        'total_pages': 0,
+        'limit': limit,
+      };
+    } catch (e) {
+      debugPrint('Error fetching orders: $e');
+      rethrow;
+    }
+  }
+
+  // Поиск данных покойного по ИИН
+  Future<Map<String, dynamic>> searchDeceasedByIin(String iin) async {
+    try {
+      final response = await get(
+        '/rip-fcb/v1/deceased',
+        queryParameters: {
+          'iin': iin,
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error searching deceased by IIN: $e');
+      rethrow;
+    }
+  }
+
+  // Создание запроса на бронирование места
+  Future<Map<String, dynamic>> createBurialRequest({
+    required int cemeteryId,
+    required String fullName,
+    required String inn,
+    required int graveId,
+    String? deathCertUrl,
+  }) async {
+    try {
+      final response = await post(
+        '/api/v8/burial-requests',
+        body: {
+          'cemetery_id': cemeteryId,
+          'full_name': fullName,
+          'inn': inn,
+          'grave_id': graveId,
+          'death_cert_url': deathCertUrl ?? '',
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error creating burial request: $e');
+      rethrow;
+    }
+  }
+
+  // Получение заявок на захоронение пользователя
+  Future<Map<String, dynamic>> getBurialRequests({
+    required String userPhone,
+  }) async {
+    try {
+      final response = await get(
+        '/api/v8/burial-requests/my',
+        queryParameters: {
+          'user_phone': userPhone,
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error fetching burial requests: $e');
+      rethrow;
+    }
+  }
+
+  // Получение заявки на захоронение по ID
+  Future<Map<String, dynamic>> getBurialRequestById(int id) async {
+    try {
+      final response = await get(
+        '/api/v8/burial-requests/$id',
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error fetching burial request by ID: $e');
       rethrow;
     }
   }

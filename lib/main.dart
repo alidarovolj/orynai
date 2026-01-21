@@ -15,6 +15,7 @@ import 'services/auth_state_manager.dart';
 import 'services/api_service.dart';
 import 'pages/cemeteries_page.dart';
 import 'pages/catalog_page.dart';
+import 'pages/about_page.dart';
 
 void main() async {
   final appStartTime = DateTime.now();
@@ -892,7 +893,12 @@ class _HomePageState extends State<HomePage> {
                                   _buildFooterLink(
                                     text: 'footer.aboutUs'.tr(),
                                     onTap: () {
-                                      // TODO: Навигация на "О нас"
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const AboutPage(),
+                                        ),
+                                      );
                                     },
                                   ),
                                   const SizedBox(height: AppSizes.paddingSmall),

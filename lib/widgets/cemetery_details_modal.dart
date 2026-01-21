@@ -328,7 +328,7 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
                   );
                   debugPrint('Graves loaded: ${_graves.length}');
 
-                  // Перемещаем камеру
+                  // Сразу перемещаем камеру на нужную позицию
                   await _mapController!.moveCamera(
                     CameraUpdate.newCameraPosition(
                       CameraPosition(
