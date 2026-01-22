@@ -16,6 +16,7 @@ import 'services/api_service.dart';
 import 'pages/cemeteries_page.dart';
 import 'pages/catalog_page.dart';
 import 'pages/about_page.dart';
+import 'pages/profile_page.dart';
 
 void main() async {
   final appStartTime = DateTime.now();
@@ -384,6 +385,14 @@ class _HomePageState extends State<HomePage> {
                           });
                         }
                       });
+                    } else {
+                      // Переходим на страницу профиля
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilePage(),
+                        ),
+                      );
                     }
                   },
                 ),
@@ -544,6 +553,32 @@ class _HomePageState extends State<HomePage> {
                                     }
                                   });
                                 },
+                                onButtonPressed: () {
+                                  final authManager = AuthStateManager();
+                                  if (!authManager.isAuthenticated) {
+                                    // Показываем модалку авторизации
+                                    showModalBottomSheet(
+                                      context: context,
+                                      backgroundColor: Colors.transparent,
+                                      isScrollControlled: true,
+                                      builder: (context) => const LoginModal(),
+                                    ).then((result) {
+                                      if (result != null) {
+                                        setState(() {
+                                          // Обновляем UI после авторизации
+                                        });
+                                      }
+                                    });
+                                  } else {
+                                    // Переходим на страницу профиля с вкладкой "Заявки на захоронение"
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const ProfilePage(initialTab: 2),
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                               const SizedBox(height: AppSizes.paddingMedium),
                               ServiceCard(
@@ -594,6 +629,16 @@ class _HomePageState extends State<HomePage> {
                                       _openTooltipId = 'findBurial';
                                     }
                                   });
+                                },
+                                onButtonPressed: () {
+                                  // Переходим на страницу бронирования места
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const CemeteriesPage(),
+                                    ),
+                                  );
                                 },
                               ),
                               const SizedBox(height: AppSizes.paddingXLarge),

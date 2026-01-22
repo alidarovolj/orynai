@@ -9,11 +9,11 @@ import '../models/burial_request.dart';
 import '../widgets/app_button.dart';
 
 class CreateMemorialPage extends StatefulWidget {
-  final int burialRequestId;
+  final int? burialRequestId;
 
   const CreateMemorialPage({
     super.key,
-    required this.burialRequestId,
+    this.burialRequestId,
   });
 
   @override
@@ -68,8 +68,16 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
   }
 
   Future<void> _loadBurialRequest() async {
+    // Если burialRequestId не передан, пропускаем загрузку
+    if (widget.burialRequestId == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
-      final response = await _apiService.getBurialRequestById(widget.burialRequestId);
+      final response = await _apiService.getBurialRequestById(widget.burialRequestId!);
       
       if (response['data'] != null) {
         final data = response['data'] as Map<String, dynamic>;

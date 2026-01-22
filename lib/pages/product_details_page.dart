@@ -11,6 +11,7 @@ import '../widgets/add_to_cart_modal.dart';
 import '../widgets/support_block.dart';
 import '../widgets/contacts_block.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'profile_page.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Product product;
@@ -183,7 +184,23 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 AppHeader(
                   isScrolled: _isScrolled,
                   onProfileTap: () {
-                    Navigator.pop(context);
+                    final authManager = AuthStateManager();
+                    if (!authManager.isAuthenticated) {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) => const LoginModal(),
+                      );
+                    } else {
+                      // Переходим на страницу профиля
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilePage(),
+                        ),
+                      );
+                    }
                   },
                 ),
                 // Основной контент с прокруткой

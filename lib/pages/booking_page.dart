@@ -38,6 +38,7 @@ class _BookingPageState extends State<BookingPage> {
   bool _datesEnabled = false;
   bool _isLoadingDeceased = false;
   String? _lastSearchedIin;
+  bool _isFullNameFromApi = false;
   DateTime? _deathDate;
   DateTime? _burialDate;
   TimeOfDay? _burialTime;
@@ -83,26 +84,43 @@ class _BookingPageState extends State<BookingPage> {
     try {
       final response = await _apiService.searchDeceasedByIin(iin);
       
+      debugPrint('Deceased search response: $response');
+      
       // Проверяем, найдены ли данные
       if (response['code'] == null || response['code'] == 'FDTH_PERSON_NOT_FOUND') {
         // Данные не найдены, оставляем поле ФИО пустым
         debugPrint('Deceased not found for IIN: $iin');
-      } else if (response['data'] != null) {
-        // Данные найдены, заполняем ФИО
+      } else if (response['code'] == 'FDTH_COMPLETED' && response['data'] != null) {
+        // Данные найдены, извлекаем из структуры data.actRecords.record[0].person
         final data = response['data'] as Map<String, dynamic>;
-        final surname = data['surname']?.toString() ?? '';
-        final name = data['name']?.toString() ?? '';
-        final patronymic = data['patronymic']?.toString() ?? '';
+        final actRecords = data['actRecords'] as Map<String, dynamic>?;
         
-        final fullNameParts = <String>[];
-        if (surname.isNotEmpty) fullNameParts.add(surname);
-        if (name.isNotEmpty) fullNameParts.add(name);
-        if (patronymic.isNotEmpty) fullNameParts.add(patronymic);
-        
-        if (fullNameParts.isNotEmpty) {
-          setState(() {
-            _fullNameController.text = fullNameParts.join(' ');
-          });
+        if (actRecords != null && actRecords['record'] != null) {
+          final records = actRecords['record'] as List;
+          if (records.isNotEmpty) {
+            final record = records[0] as Map<String, dynamic>;
+            final person = record['person'] as Map<String, dynamic>?;
+            
+            if (person != null) {
+              // Извлекаем ФИО из person
+              final surname = person['surname']?.toString() ?? '';
+              final name = person['name']?.toString() ?? '';
+              final secondname = person['secondname']?.toString() ?? '';
+              
+              final fullNameParts = <String>[];
+              if (surname.isNotEmpty) fullNameParts.add(surname);
+              if (name.isNotEmpty) fullNameParts.add(name);
+              if (secondname.isNotEmpty) fullNameParts.add(secondname);
+              
+              if (fullNameParts.isNotEmpty) {
+                setState(() {
+                  _fullNameController.text = fullNameParts.join(' ');
+                  _isFullNameFromApi = true;
+                });
+                debugPrint('FIO filled from API: ${_fullNameController.text}');
+              }
+            }
+          }
         }
       }
     } catch (e) {
@@ -609,6 +627,7 @@ class _BookingPageState extends State<BookingPage> {
                           // Поле ФИО
                           TextField(
                             controller: _fullNameController,
+                            enabled: !_isFullNameFromApi,
                             decoration: InputDecoration(
                               hintText: 'ФИО',
                               hintStyle: TextStyle(
@@ -630,6 +649,12 @@ class _BookingPageState extends State<BookingPage> {
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: AppColors.buttonBackground,
+                                ),
+                              ),
+                              disabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
                                   color: AppColors.accordionBorder.withOpacity(0.3),

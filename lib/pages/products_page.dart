@@ -11,6 +11,7 @@ import '../widgets/login_modal.dart';
 import '../widgets/products_filter_block.dart';
 import '../widgets/product_card.dart';
 import 'product_details_page.dart';
+import 'profile_page.dart';
 
 class ProductsPage extends StatefulWidget {
   final Category category;
@@ -162,8 +163,31 @@ class _ProductsPageState extends State<ProductsPage> {
                           setState(() {});
                         }
                       });
+                    } else {
+                      // Переходим на страницу профиля
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilePage(),
+                        ),
+                      );
                     }
                   },
+                ),
+                // Кнопка "Назад"
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.paddingMedium,
+                    vertical: 8,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.pop(context),
+                      color: AppColors.iconAndText,
+                    ),
+                  ),
                 ),
                 // Основной контент
                 Expanded(

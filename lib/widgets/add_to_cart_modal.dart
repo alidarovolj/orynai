@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as DatePicker;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 import '../services/api_service.dart';
 
@@ -32,6 +33,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
   bool _isLoading = false;
   bool _isFormattingDate = false;
   bool _isFormattingTime = false;
+  String? _savedAddress;
 
   bool get _isFormValid {
     return _addressController.text.trim().isNotEmpty &&
@@ -45,6 +47,40 @@ class _AddToCartModalState extends State<AddToCartModal> {
     _addressController.addListener(_onFieldChanged);
     _dateController.addListener(_onDateChanged);
     _timeController.addListener(_onTimeChanged);
+    _loadSavedAddress();
+  }
+
+  Future<void> _loadSavedAddress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedAddress = prefs.getString('last_delivery_address');
+      if (savedAddress != null && savedAddress.isNotEmpty) {
+        setState(() {
+          _savedAddress = savedAddress;
+        });
+      }
+    } catch (e) {
+      debugPrint('Ошибка загрузки сохраненного адреса: $e');
+    }
+  }
+
+  Future<void> _saveAddress(String address) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_delivery_address', address);
+      setState(() {
+        _savedAddress = address;
+      });
+    } catch (e) {
+      debugPrint('Ошибка сохранения адреса: $e');
+    }
+  }
+
+  void _useSavedAddress() {
+    if (_savedAddress != null && _savedAddress!.isNotEmpty) {
+      _addressController.text = _savedAddress!;
+      setState(() {});
+    }
   }
 
   void _onFieldChanged() {
@@ -314,6 +350,12 @@ class _AddToCartModalState extends State<AddToCartModal> {
           '✅ [AddToCart] Товар успешно добавлен в корзину. ID: $cartId',
         );
 
+        // Сохраняем адрес после успешного добавления
+        final address = _addressController.text.trim();
+        if (address.isNotEmpty) {
+          await _saveAddress(address);
+        }
+
         if (mounted) {
           Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -449,6 +491,38 @@ class _AddToCartModalState extends State<AddToCartModal> {
                   fontFamily: 'Manrope',
                 ),
               ),
+              // Кнопка "использовать прошлый адрес"
+              if (_savedAddress != null && _savedAddress!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _useSavedAddress,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.history,
+                        size: 16,
+                        color: AppColors.buttonBackground,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Использовать прошлый адрес',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.buttonBackground,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSizes.paddingMedium),
               // Поле даты
               const Text(

@@ -95,58 +95,68 @@ class StepCard extends StatelessWidget {
           buttonsInRow
               ? Row(
                   children: [
-                    ActionButton(
-                      text: buttonText,
-                      color: buttonColor,
-                      icon: buttonIcon,
-                      isPhoneIcon: isPhoneIcon,
-                      isWhatsApp: false,
-                      onPhoneTap: onPhoneTap,
+                    IntrinsicWidth(
+                      child: ActionButton(
+                        text: buttonText,
+                        color: buttonColor,
+                        icon: buttonIcon,
+                        isPhoneIcon: isPhoneIcon,
+                        isWhatsApp: false,
+                        onPhoneTap: onPhoneTap,
+                      ),
                     ),
                     const SizedBox(width: AppSizes.paddingMedium),
-                    ActionButton(
-                      text: secondButtonText!,
-                      color: secondButtonColor!,
-                      icon: secondButtonIcon!,
-                      isPhoneIcon: false,
-                      isWhatsApp: isSecondButtonWhatsApp,
-                      onWhatsAppTap: onWhatsAppTap,
+                    IntrinsicWidth(
+                      child: ActionButton(
+                        text: secondButtonText!,
+                        color: secondButtonColor!,
+                        icon: secondButtonIcon!,
+                        isPhoneIcon: false,
+                        isWhatsApp: isSecondButtonWhatsApp,
+                        onWhatsAppTap: onWhatsAppTap,
+                      ),
                     ),
                   ],
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ActionButton(
-                      text: buttonText,
-                      color: buttonColor,
-                      icon: buttonIcon,
-                      isPhoneIcon: isPhoneIcon,
-                      isWhatsApp: false,
-                      onPhoneTap: onPhoneTap,
+                    IntrinsicWidth(
+                      child: ActionButton(
+                        text: buttonText,
+                        color: buttonColor,
+                        icon: buttonIcon,
+                        isPhoneIcon: isPhoneIcon,
+                        isWhatsApp: false,
+                        onPhoneTap: onPhoneTap,
+                      ),
                     ),
                     const SizedBox(height: AppSizes.paddingMedium),
-                    ActionButton(
-                      text: secondButtonText!,
-                      color: secondButtonColor!,
-                      icon: secondButtonIcon!,
-                      isPhoneIcon: false,
-                      isWhatsApp: isSecondButtonWhatsApp,
-                      onWhatsAppTap: onWhatsAppTap,
+                    IntrinsicWidth(
+                      child: ActionButton(
+                        text: secondButtonText!,
+                        color: secondButtonColor!,
+                        icon: secondButtonIcon!,
+                        isPhoneIcon: false,
+                        isWhatsApp: isSecondButtonWhatsApp,
+                        onWhatsAppTap: onWhatsAppTap,
+                      ),
                     ),
                   ],
                 )
         else
           Align(
             alignment: Alignment.centerLeft,
-            child: ActionButton(
-              text: buttonText,
-              color: buttonColor,
-              icon: buttonIcon,
-              isPhoneIcon: isPhoneIcon,
-              isWhatsApp: isWhatsApp,
-              onPhoneTap: onPhoneTap,
-              onWhatsAppTap: onWhatsAppTap,
+            child: IntrinsicWidth(
+              child: ActionButton(
+                text: buttonText,
+                color: buttonColor,
+                icon: buttonIcon,
+                isPhoneIcon: isPhoneIcon,
+                isWhatsApp: isWhatsApp,
+                onPhoneTap: onPhoneTap,
+                onWhatsAppTap: onWhatsAppTap,
+              ),
             ),
           ),
       ],

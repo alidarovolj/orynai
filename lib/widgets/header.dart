@@ -4,6 +4,7 @@ import '../constants.dart';
 import '../services/auth_state_manager.dart';
 import '../widgets/login_modal.dart';
 import '../widgets/menu_modal.dart';
+import '../pages/profile_page.dart';
 
 class AppHeader extends StatelessWidget {
   final bool isScrolled;
@@ -163,8 +164,7 @@ class AppHeader extends StatelessWidget {
                     Container(width: 20, height: 20, color: Colors.transparent),
               ),
             ),
-      onPressed:
-          onProfileTap ??
+      onPressed: onProfileTap ??
           () {
             if (!isAuthenticated) {
               showModalBottomSheet(
@@ -178,6 +178,14 @@ class AppHeader extends StatelessWidget {
                   // Используем setState через родительский виджет
                 }
               });
+            } else {
+              // Если пользователь авторизован, переходим на страницу профиля
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePage(),
+                ),
+              );
             }
           },
     );

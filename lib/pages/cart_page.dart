@@ -5,12 +5,16 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import '../constants.dart';
 import '../models/cart_item.dart';
 import '../models/product.dart';
+import '../models/order.dart';
 import '../services/api_service.dart';
 import '../services/auth_state_manager.dart';
 import '../widgets/header.dart';
 import '../widgets/product_card.dart';
 import '../widgets/app_button.dart';
+import '../widgets/order_payment_button.dart';
+import '../widgets/login_modal.dart';
 import 'product_details_page.dart';
+import 'profile_page.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -181,23 +185,45 @@ class _CartPageState extends State<CartPage> {
           .toList();
 
       // Отправляем запрос на создание заказа
-      await _apiService.post(
+      final response = await _apiService.post(
         '/api/v1/orders',
         body: {'order_items': orderItems},
         requiresAuth: true,
       );
 
-      // После успешной оплаты показываем уведомление и возвращаемся назад
+      // API возвращает только {"id": 127}, нужно получить полный заказ
+      final orderData = response as Map<String, dynamic>;
+      final orderId = orderData['id'] as int;
+
+      // Получаем полный заказ по ID
+      final ordersResponse = await _apiService.get(
+        '/api/v1/orders',
+        queryParameters: {'page': '1', 'limit': '10'},
+        requiresAuth: true,
+      );
+
+      final ordersData = OrdersResponse.fromJson(ordersResponse as Map<String, dynamic>);
+      final order = ordersData.items.firstWhere(
+        (o) => o.id == orderId,
+        orElse: () => throw Exception('Заказ не найден'),
+      );
+
+      // Открываем модалку оплаты через переиспользуемый хелпер
       if (mounted) {
-        ScaffoldMessenger.of(
+        OrderPaymentHelper.openPayment(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Заказ успешно создан')));
-        // Возвращаемся назад после небольшой задержки
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
+          order,
+          onSuccess: () {
+            // После успешной оплаты возвращаемся назад
             Navigator.pop(context);
-          }
-        });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Оплата успешно завершена'),
+                backgroundColor: Color(0xFF4CAF50),
+              ),
+            );
+          },
+        );
       }
     } catch (e) {
       debugPrint('Error creating order: $e');
@@ -286,7 +312,20 @@ class _CartPageState extends State<CartPage> {
                   onProfileTap: () {
                     final authManager = AuthStateManager();
                     if (!authManager.isAuthenticated) {
-                      // TODO: Показать модалку авторизации
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) => const LoginModal(),
+                      );
+                    } else {
+                      // Переходим на страницу профиля
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilePage(),
+                        ),
+                      );
                     }
                   },
                 ),

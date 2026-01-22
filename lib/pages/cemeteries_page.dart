@@ -8,6 +8,7 @@ import '../services/auth_state_manager.dart';
 import '../widgets/header.dart';
 import '../widgets/cemetery_details_modal.dart';
 import '../widgets/login_modal.dart';
+import 'profile_page.dart';
 
 class CemeteriesPage extends StatefulWidget {
   const CemeteriesPage({super.key});
@@ -125,6 +126,14 @@ class _CemeteriesPageState extends State<CemeteriesPage> {
                           });
                         }
                       });
+                    } else {
+                      // Переходим на страницу профиля
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilePage(),
+                        ),
+                      );
                     }
                   },
                 ),

@@ -680,6 +680,220 @@ class ApiService {
       rethrow;
     }
   }
+
+  // Обработка платежа картой
+  Future<Map<String, dynamic>> processCardPayment({
+    required int amount,
+    required String cardNumber,
+    required String cvc,
+    required String email,
+    required String expDate,
+    String currency = 'KZT',
+    String terminalType = 'shop',
+  }) async {
+    try {
+      final response = await post(
+        '/api/v1/payments/card',
+        body: {
+          'amount': amount,
+          'cardNumber': cardNumber,
+          'currency': currency,
+          'cvc': cvc,
+          'email': email,
+          'expDate': expDate,
+          'terminalType': terminalType,
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error processing card payment: $e');
+      rethrow;
+    }
+  }
+
+  // Подтверждение оплаты заказа
+  Future<Map<String, dynamic>> confirmOrderPayment({
+    required int orderId,
+    required String transactionId,
+  }) async {
+    try {
+      final response = await post(
+        '/api/v1/orders/$orderId/confirm-payment',
+        body: {
+          'transaction_id': transactionId,
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error confirming order payment: $e');
+      rethrow;
+    }
+  }
+
+  // Подтверждение оплаты заявки на захоронение
+  Future<Map<String, dynamic>> confirmBurialPayment({
+    required int burialRequestId,
+    required String transactionId,
+  }) async {
+    try {
+      final response = await post(
+        '/api/v8/burial-requests/$burialRequestId/confirm-payment',
+        body: {
+          'transaction_id': transactionId,
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error confirming burial payment: $e');
+      rethrow;
+    }
+  }
+
+  // Создание инвойса для оплаты
+  Future<Map<String, dynamic>> createInvoice({
+    required int orderId,
+    required int amount,
+    String currency = 'KZT',
+    String? description,
+  }) async {
+    try {
+      final response = await post(
+        '/api/v1/payments/create-invoice',
+        body: {
+          'amount': amount,
+          'currency': currency,
+          'description': description ?? 'Оплата заказа #$orderId',
+          'metadata': {
+            'order_id': orderId,
+            'service': 'supplier',
+          },
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error creating invoice: $e');
+      rethrow;
+    }
+  }
+
+  // Генерация токена для оплаты
+  Future<Map<String, dynamic>> generatePaymentToken({
+    required int amount,
+    required String invoiceId,
+    String terminalType = 'shop',
+  }) async {
+    try {
+      final response = await post(
+        '/api/v1/payments/generate-token',
+        body: {
+          'amount': amount,
+          'invoiceID': invoiceId,
+          'terminalType': terminalType,
+        },
+        requiresAuth: true,
+      );
+      
+      // Если ответ - объект, возвращаем его
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      
+      return {};
+    } catch (e) {
+      debugPrint('Error generating payment token: $e');
+      rethrow;
+    }
+  }
+
+  // Получение уведомлений
+  Future<Map<String, dynamic>> getNotifications({
+    int limit = 10,
+    int offset = 0,
+    String? serviceName,
+  }) async {
+    try {
+      final queryParams = <String, String>{
+        'channel': 'push',
+        'limit': limit.toString(),
+        'offset': offset.toString(),
+      };
+      
+      if (serviceName != null && serviceName.isNotEmpty && serviceName != 'Все') {
+        queryParams['service_name'] = serviceName;
+      }
+
+      final response = await get(
+        '/api/v10/my/notifications',
+        queryParameters: queryParams,
+        requiresAuth: true,
+      );
+
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+
+      return {};
+    } catch (e) {
+      debugPrint('Error getting notifications: $e');
+      rethrow;
+    }
+  }
+
+  // Пометка всех уведомлений как прочитанных
+  Future<void> markAllNotificationsAsRead() async {
+    try {
+      await post(
+        '/api/v1/notifications/mark-all-read',
+        body: {},
+        requiresAuth: true,
+      );
+    } catch (e) {
+      debugPrint('Error marking all notifications as read: $e');
+      rethrow;
+    }
+  }
+
+  // Пометка уведомления как прочитанного
+  Future<void> markNotificationAsRead(int notificationId) async {
+    try {
+      await post(
+        '/api/v1/notifications/$notificationId/mark-read',
+        body: {},
+        requiresAuth: true,
+      );
+    } catch (e) {
+      debugPrint('Error marking notification as read: $e');
+      rethrow;
+    }
+  }
 }
 
 class ApiException implements Exception {

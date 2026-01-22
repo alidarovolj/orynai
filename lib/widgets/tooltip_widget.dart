@@ -24,31 +24,50 @@ class TooltipWidget extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        GestureDetector(
-          onTap: () {
-            if (tooltipText != null) {
-              onTap();
-            }
-          },
-          child: Container(
-            width: 24,
-            height: 24,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Center(
-              child: Text(
-                'i',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.iconAndText,
+        // Основной контент: иконка и текст
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: () {
+                if (tooltipText != null) {
+                  onTap();
+                }
+              },
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Text(
+                    'i',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.iconAndText,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+            if (showInfoText)
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: AppSizes.paddingSmall),
+                  child: Text(
+                    'services.memorial.howItWorks'.tr(),
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                    overflow: TextOverflow.visible,
+                    softWrap: true,
+                  ),
+                ),
+              ),
+          ],
         ),
+        // Тултип (всплывающая подсказка)
         if (openTooltipId == tooltipKey && tooltipText != null)
           Positioned(
             bottom: 40,
@@ -131,13 +150,88 @@ class TooltipWidget extends StatelessWidget {
                     painter: TooltipTailPainter(isUpward: false),
                   ),
           ),
-        if (showInfoText)
-          Padding(
-            padding: const EdgeInsets.only(left: AppSizes.paddingSmall),
-            child: Text(
-              'services.memorial.howItWorks'.tr(),
-              style: const TextStyle(fontSize: 12, color: Colors.white),
-            ),
+        // Тултип (всплывающая подсказка)
+        if (openTooltipId == tooltipKey && tooltipText != null)
+          Positioned(
+            bottom: 40,
+            left: showInfoText ? -120 : null,
+            right: showInfoText ? -120 : 0,
+            child: showInfoText
+                ? Center(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          maxWidth: 280,
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          tooltipText!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.iconAndText,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        maxWidth: 280,
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        tooltipText!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.iconAndText,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        if (openTooltipId == tooltipKey && tooltipText != null)
+          Positioned(
+            bottom: 32,
+            left: showInfoText ? 0 : null,
+            right: showInfoText ? 0 : 20,
+            child: showInfoText
+                ? Center(
+                    child: CustomPaint(
+                      size: const Size(16, 8),
+                      painter: TooltipTailPainter(isUpward: false),
+                    ),
+                  )
+                : CustomPaint(
+                    size: const Size(16, 8),
+                    painter: TooltipTailPainter(isUpward: false),
+                  ),
           ),
       ],
     );
