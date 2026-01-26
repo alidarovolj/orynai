@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 import 'constants.dart';
 import 'widgets/header.dart';
 import 'widgets/service_card.dart';
@@ -155,11 +156,24 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     print('🏗️  [${_getTimestamp()}] MyApp build started');
+    
+    // Проверяем, нужно ли включить Chucker Flutter
+    final env = dotenv.env['ENV'];
+    final isDevMode = env == 'dev';
+    
+    // Список navigator observers
+    final navigatorObservers = <NavigatorObserver>[];
+    if (isDevMode) {
+      navigatorObservers.add(ChuckerFlutter.navigatorObserver);
+      print('🔍 [${_getTimestamp()}] Chucker Flutter navigatorObserver добавлен');
+    }
+
     return MaterialApp(
       title: 'Orynai',
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
+      navigatorObservers: navigatorObservers,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.buttonBackground,

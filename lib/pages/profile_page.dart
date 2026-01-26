@@ -8,9 +8,13 @@ import '../widgets/header.dart';
 import '../models/order.dart';
 import '../models/burial_request.dart';
 import '../models/notification.dart' as models;
-import '../widgets/app_button.dart';
 import '../widgets/order_payment_button.dart';
+import '../widgets/app_button.dart';
 import 'create_memorial_page.dart';
+import '../models/cemetery.dart';
+import '../services/cemetery_service.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   final int? initialTab;
@@ -36,7 +40,7 @@ class _ProfilePageState extends State<ProfilePage>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 4,
+      length: 6,
       vsync: this,
       initialIndex: widget.initialTab ?? 0,
     );
@@ -164,6 +168,8 @@ class _ProfilePageState extends State<ProfilePage>
                       Tab(text: 'Заказы'),
                       Tab(text: 'Заявки на захоронение'),
                       Tab(text: 'Уведомления'),
+                      Tab(text: 'Обращения в акимат'),
+                      Tab(text: 'Запрос на перезахоронение'),
                     ],
                   ),
                 ),
@@ -176,6 +182,8 @@ class _ProfilePageState extends State<ProfilePage>
                       _buildOrdersTab(),
                       _buildBurialRequestsTab(),
                       _buildNotificationsTab(),
+                      _buildAkimatAppealsTab(),
+                      _buildReburialRequestTab(),
                     ],
                   ),
                 ),
@@ -213,6 +221,14 @@ class _ProfilePageState extends State<ProfilePage>
 
   Widget _buildNotificationsTab() {
     return NotificationsListWidget(apiService: _apiService);
+  }
+
+  Widget _buildAkimatAppealsTab() {
+    return AkimatAppealsWidget(apiService: _apiService);
+  }
+
+  Widget _buildReburialRequestTab() {
+    return ReburialRequestWidget(apiService: _apiService);
   }
 
   Widget _buildDataRow({required String label, required String value}) {
@@ -408,7 +424,9 @@ class _ProfilePageState extends State<ProfilePage>
                       ? Colors.orange
                       : request.status == 'completed'
                           ? const Color(0xFF4CAF50)
-                          : AppColors.accordionBorder,
+                          : request.status == 'cancelled'
+                              ? Colors.red
+                              : AppColors.accordionBorder,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -416,7 +434,9 @@ class _ProfilePageState extends State<ProfilePage>
                       ? 'Ожидает'
                       : request.status == 'completed'
                           ? 'Завершена'
-                          : request.status,
+                          : request.status == 'cancelled'
+                              ? 'Отменена'
+                              : request.status,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -448,21 +468,24 @@ class _ProfilePageState extends State<ProfilePage>
             const SizedBox(height: AppSizes.paddingSmall),
             _buildInfoRow('Резервация до', reservationExpires),
           ],
-          const SizedBox(height: AppSizes.paddingMedium),
-          AppButton(
-            text: 'Создать мемориал',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CreateMemorialPage(
-                    burialRequestId: request.id,
+          // Кнопка "Создать мемориал" только для статуса "pending"
+          if (request.status == 'pending') ...[
+            const SizedBox(height: AppSizes.paddingMedium),
+            AppButton(
+              text: 'Создать мемориал',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateMemorialPage(
+                      burialRequestId: request.id,
+                    ),
                   ),
-                ),
-              );
-            },
-            backgroundColor: AppColors.buttonBackground,
-          ),
+                );
+              },
+              backgroundColor: AppColors.buttonBackground,
+            ),
+          ],
         ],
       ),
     );
@@ -841,7 +864,9 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
                       ? Colors.orange
                       : request.status == 'completed'
                           ? const Color(0xFF4CAF50)
-                          : AppColors.accordionBorder,
+                          : request.status == 'cancelled'
+                              ? Colors.red
+                              : AppColors.accordionBorder,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -849,7 +874,9 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
                       ? 'Ожидает'
                       : request.status == 'completed'
                           ? 'Завершена'
-                          : request.status,
+                          : request.status == 'cancelled'
+                              ? 'Отменена'
+                              : request.status,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -881,21 +908,24 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
             const SizedBox(height: AppSizes.paddingSmall),
             _buildInfoRow('Резервация до', reservationExpires),
           ],
-          const SizedBox(height: AppSizes.paddingMedium),
-          AppButton(
-            text: 'Создать мемориал',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CreateMemorialPage(
-                    burialRequestId: request.id,
+          // Кнопка "Создать мемориал" только для статуса "pending"
+          if (request.status == 'pending') ...[
+            const SizedBox(height: AppSizes.paddingMedium),
+            AppButton(
+              text: 'Создать мемориал',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateMemorialPage(
+                      burialRequestId: request.id,
+                    ),
                   ),
-                ),
-              );
-            },
-            backgroundColor: AppColors.buttonBackground,
-          ),
+                );
+              },
+              backgroundColor: AppColors.buttonBackground,
+            ),
+          ],
         ],
       ),
     );
@@ -1362,3 +1392,850 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
     );
   }
 }
+
+class AkimatAppealsWidget extends StatefulWidget {
+  final ApiService apiService;
+
+  const AkimatAppealsWidget({super.key, required this.apiService});
+
+  @override
+  State<AkimatAppealsWidget> createState() => _AkimatAppealsWidgetState();
+}
+
+class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
+  final TextEditingController _contentController = TextEditingController();
+  int? _selectedTypeId;
+  bool _isLoading = false;
+  final int _maxContentLength = 3500;
+
+  final List<Map<String, dynamic>> _appealTypes = [
+    {'id': 1, 'name': 'Жалоба'},
+    {'id': 2, 'name': 'Предложение'},
+    {'id': 3, 'name': 'Запросы информации'},
+  ];
+
+  @override
+  void dispose() {
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _createAppeal() async {
+    if (_selectedTypeId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Выберите тип обращения')),
+      );
+      return;
+    }
+
+    final content = _contentController.text.trim();
+    if (content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Введите текст обращения')),
+      );
+      return;
+    }
+
+    if (content.length > _maxContentLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Текст обращения не должен превышать $_maxContentLength символов')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authManager = AuthStateManager();
+      final userPhone = authManager.currentUser?.phone ?? '';
+
+      if (userPhone.isEmpty) {
+        throw Exception('Не удалось получить номер телефона пользователя');
+      }
+
+      await widget.apiService.createAkimatAppeal(
+        userPhone: userPhone,
+        typeId: _selectedTypeId!,
+        content: content,
+        akimatId: 6, // Значение по умолчанию из примера
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Обращение успешно создано'),
+            backgroundColor: Color(0xFF4CAF50),
+          ),
+        );
+        
+        // Очищаем форму
+        setState(() {
+          _selectedTypeId = null;
+          _contentController.clear();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error creating akimat appeal: $e');
+      if (mounted) {
+        String errorMessage = 'Ошибка создания обращения';
+        
+        if (e is ApiException) {
+          errorMessage = e.message;
+          if (e.body != null && e.body!['message'] != null) {
+            errorMessage = e.body!['message'].toString();
+          }
+        } else {
+          errorMessage = 'Ошибка создания обращения: ${e.toString()}';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSizes.paddingMedium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Заголовок
+          const Text(
+            'СОЗДАНИЕ ОБРАЩЕНИЯ В АКИМАТ',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Поле "Тип обращения"
+          const Text(
+            'Тип обращения',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingSmall),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accordionBorder.withOpacity(0.3),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DropdownButton<int>(
+              value: _selectedTypeId,
+              isExpanded: true,
+              underline: const SizedBox(),
+              hint: Text(
+                'Выберите тип обращения',
+                style: TextStyle(
+                  color: AppColors.accordionBorder,
+                  fontFamily: 'Manrope',
+                ),
+              ),
+              items: _appealTypes.map((type) {
+                return DropdownMenuItem<int>(
+                  value: type['id'] as int,
+                  child: Text(
+                    type['name'] as String,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF1d1c1a),
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (int? value) {
+                setState(() {
+                  _selectedTypeId = value;
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Поле "Обращение"
+          const Text(
+            'Обращение',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingSmall),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accordionBorder.withOpacity(0.3),
+              ),
+            ),
+            child: TextField(
+              controller: _contentController,
+              maxLines: 10,
+              maxLength: _maxContentLength,
+              decoration: InputDecoration(
+                hintText: 'Введите текст обращения',
+                hintStyle: TextStyle(
+                  color: AppColors.accordionBorder,
+                  fontFamily: 'Manrope',
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.all(16),
+                counterStyle: TextStyle(
+                  color: AppColors.accordionBorder,
+                  fontFamily: 'Manrope',
+                ),
+              ),
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF1d1c1a),
+                fontFamily: 'Manrope',
+              ),
+              onChanged: (value) {
+                setState(() {});
+              },
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Кнопка "Создать обращение"
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _createAppeal,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.buttonBackground,
+                disabledBackgroundColor: AppColors.accordionBorder,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSizes.paddingMedium,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'Создать обращение',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: 'Manrope',
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ReburialRequestWidget extends StatefulWidget {
+  final ApiService apiService;
+
+  const ReburialRequestWidget({super.key, required this.apiService});
+
+  @override
+  State<ReburialRequestWidget> createState() => _ReburialRequestWidgetState();
+}
+
+class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
+  final CemeteryService _cemeteryService = CemeteryService();
+  final TextEditingController _reasonController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
+  
+  List<Cemetery> _cemeteries = [];
+  Cemetery? _oldCemetery;
+  Cemetery? _newCemetery;
+  File? _deathCertificateFile;
+  File? _kinshipConfirmationFile;
+  File? _graveDocumentFile;
+  bool _isLoadingCemeteries = true;
+  bool _isSubmitting = false;
+  final int _maxReasonLength = 500;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCemeteries();
+  }
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCemeteries() async {
+    try {
+      final cemeteries = await _cemeteryService.getCemeteries();
+      setState(() {
+        _cemeteries = cemeteries;
+        _isLoadingCemeteries = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading cemeteries: $e');
+      setState(() {
+        _isLoadingCemeteries = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка загрузки кладбищ: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFile(FileType type) async {
+    try {
+      final XFile? file = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+      );
+
+      if (file != null) {
+        setState(() {
+          switch (type) {
+            case FileType.deathCertificate:
+              _deathCertificateFile = File(file.path);
+              break;
+            case FileType.kinshipConfirmation:
+              _kinshipConfirmationFile = File(file.path);
+              break;
+            case FileType.graveDocument:
+              _graveDocumentFile = File(file.path);
+              break;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking file: $e');
+      if (mounted) {
+        String errorMessage = 'Ошибка выбора файла';
+        
+        if (e.toString().contains('channel-error') || 
+            e.toString().contains('Unable to establish connection')) {
+          errorMessage = 'Не удалось открыть галерею. Проверьте разрешения приложения.';
+        } else if (e.toString().contains('permission')) {
+          errorMessage = 'Необходимо разрешение на доступ к галерее';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  void _removeFile(FileType type) {
+    setState(() {
+      switch (type) {
+        case FileType.deathCertificate:
+          _deathCertificateFile = null;
+          break;
+        case FileType.kinshipConfirmation:
+          _kinshipConfirmationFile = null;
+          break;
+        case FileType.graveDocument:
+          _graveDocumentFile = null;
+          break;
+      }
+    });
+  }
+
+  Widget _buildFileUploadSection({
+    required String title,
+    required File? file,
+    required VoidCallback onPickFile,
+    required VoidCallback onRemoveFile,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF1d1c1a),
+            fontFamily: 'Manrope',
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingSmall),
+        if (file != null)
+          Container(
+            padding: const EdgeInsets.all(AppSizes.paddingMedium),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accordionBorder.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.insert_drive_file,
+                  color: AppColors.iconAndText,
+                  size: 24,
+                ),
+                const SizedBox(width: AppSizes.paddingSmall),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        file.path.split('/').last,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF1d1c1a),
+                          fontFamily: 'Manrope',
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${(file.lengthSync() / 1024).toStringAsFixed(1)} KB',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.accordionBorder,
+                          fontFamily: 'Manrope',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  color: AppColors.iconAndText,
+                  onPressed: onRemoveFile,
+                ),
+              ],
+            ),
+          )
+        else
+          GestureDetector(
+            onTap: onPickFile,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSizes.paddingXLarge),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.accordionBorder.withOpacity(0.3),
+                  style: BorderStyle.solid,
+                  width: 2,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.upload_file,
+                    size: 48,
+                    color: AppColors.accordionBorder,
+                  ),
+                  const SizedBox(height: AppSizes.paddingMedium),
+                  const Text(
+                    'Загрузите файлы',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1d1c1a),
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.paddingSmall),
+                  Text(
+                    'Перетащите файлы или загрузите файлы',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.accordionBorder,
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.paddingMedium),
+                  AppButton(
+                    text: 'Загрузить',
+                    onPressed: onPickFile,
+                    isOutlined: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _submitRequest() async {
+    if (_oldCemetery == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Выберите старое место захоронения')),
+      );
+      return;
+    }
+
+    if (_newCemetery == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Выберите новое место захоронения')),
+      );
+      return;
+    }
+
+    final reason = _reasonController.text.trim();
+    if (reason.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Введите причину перезахоронения')),
+      );
+      return;
+    }
+
+    if (_deathCertificateFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Загрузите свидетельство о смерти')),
+      );
+      return;
+    }
+
+    if (_kinshipConfirmationFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Загрузите подтверждение родства')),
+      );
+      return;
+    }
+
+    if (_graveDocumentFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Загрузите документ на могилу')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      // TODO: Реализовать отправку запроса на перезахоронение
+      // await widget.apiService.createReburialRequest(...);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Запрос на перезахоронение успешно создан'),
+            backgroundColor: Color(0xFF4CAF50),
+          ),
+        );
+        
+        // Очищаем форму
+        setState(() {
+          _oldCemetery = null;
+          _newCemetery = null;
+          _reasonController.clear();
+          _deathCertificateFile = null;
+          _kinshipConfirmationFile = null;
+          _graveDocumentFile = null;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error creating reburial request: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка создания запроса: ${e.toString()}'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSizes.paddingMedium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Заголовок
+          const Text(
+            'СОЗДАНИЕ ЗАПРОСА НА ПЕРЕЗАХОРОНЕНИЕ',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Старое место захоронения
+          const Text(
+            'Старое место захоронения:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingSmall),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accordionBorder.withOpacity(0.3),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DropdownButton<Cemetery>(
+              value: _oldCemetery,
+              isExpanded: true,
+              underline: const SizedBox(),
+              hint: Text(
+                'Выберите кладбище',
+                style: TextStyle(
+                  color: AppColors.accordionBorder,
+                  fontFamily: 'Manrope',
+                ),
+              ),
+              items: _cemeteries.map((cemetery) {
+                return DropdownMenuItem<Cemetery>(
+                  value: cemetery,
+                  child: Text(
+                    cemetery.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF1d1c1a),
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: _isLoadingCemeteries
+                  ? null
+                  : (Cemetery? value) {
+                      setState(() {
+                        _oldCemetery = value;
+                      });
+                    },
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Новое место захоронения
+          const Text(
+            'Новое место захоронения:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingSmall),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accordionBorder.withOpacity(0.3),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DropdownButton<Cemetery>(
+              value: _newCemetery,
+              isExpanded: true,
+              underline: const SizedBox(),
+              hint: Text(
+                'Выберите кладбище',
+                style: TextStyle(
+                  color: AppColors.accordionBorder,
+                  fontFamily: 'Manrope',
+                ),
+              ),
+              items: _cemeteries.map((cemetery) {
+                return DropdownMenuItem<Cemetery>(
+                  value: cemetery,
+                  child: Text(
+                    cemetery.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF1d1c1a),
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: _isLoadingCemeteries
+                  ? null
+                  : (Cemetery? value) {
+                      setState(() {
+                        _newCemetery = value;
+                      });
+                    },
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Причина
+          const Text(
+            'Причина:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingSmall),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accordionBorder.withOpacity(0.3),
+              ),
+            ),
+            child: TextField(
+              controller: _reasonController,
+              maxLines: 5,
+              maxLength: _maxReasonLength,
+              decoration: InputDecoration(
+                hintText: 'Причина перезахоронения...',
+                hintStyle: TextStyle(
+                  color: AppColors.accordionBorder,
+                  fontFamily: 'Manrope',
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.all(16),
+                counterStyle: TextStyle(
+                  color: AppColors.accordionBorder,
+                  fontFamily: 'Manrope',
+                ),
+              ),
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF1d1c1a),
+                fontFamily: 'Manrope',
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Свидетельство о смерти
+          _buildFileUploadSection(
+            title: 'Свидетельство о смерти:',
+            file: _deathCertificateFile,
+            onPickFile: () => _pickFile(FileType.deathCertificate),
+            onRemoveFile: () => _removeFile(FileType.deathCertificate),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Подтверждение родства заявителя
+          _buildFileUploadSection(
+            title: 'Подтверждение родства заявителя:',
+            file: _kinshipConfirmationFile,
+            onPickFile: () => _pickFile(FileType.kinshipConfirmation),
+            onRemoveFile: () => _removeFile(FileType.kinshipConfirmation),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Документ на могилу
+          _buildFileUploadSection(
+            title: 'Документ на могилу:',
+            file: _graveDocumentFile,
+            onPickFile: () => _pickFile(FileType.graveDocument),
+            onRemoveFile: () => _removeFile(FileType.graveDocument),
+          ),
+          const SizedBox(height: AppSizes.paddingXLarge),
+          // Кнопка "Создать запрос в акимат"
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _submitRequest,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isSubmitting
+                    ? AppColors.accordionBorder
+                    : AppColors.buttonBackground,
+                disabledBackgroundColor: AppColors.accordionBorder,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSizes.paddingMedium,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'Создать запрос в акимат',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: 'Manrope',
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum FileType {
+  deathCertificate,
+  kinshipConfirmation,
+  graveDocument,
+}
+

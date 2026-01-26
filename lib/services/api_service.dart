@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:chucker_flutter/chucker_flutter.dart';
 import 'auth_state_manager.dart';
 
 class ApiService {
@@ -12,6 +13,7 @@ class ApiService {
   String? _baseUrl;
   String? _csrfToken;
   final Map<String, String> _cookies = {};
+  http.Client? _httpClient;
 
   // Инициализация URL из .env
   Future<void> initialize() async {
@@ -22,7 +24,19 @@ class ApiService {
       _baseUrl = 'https://stage.ripservice.kz';
       debugPrint('Warning: API_URL not found in .env, using default: $_baseUrl');
     }
+
+    // Инициализация HTTP клиента с Chucker только в dev режиме
+    final env = dotenv.env['ENV'];
+    if (env == 'dev') {
+      _httpClient = ChuckerHttpClient(http.Client());
+      debugPrint('🔍 [API] Chucker Flutter включен для мониторинга HTTP запросов');
+    } else {
+      _httpClient = http.Client();
+    }
   }
+
+  // Получение HTTP клиента
+  http.Client get _client => _httpClient ?? http.Client();
 
   String get baseUrl => _baseUrl ?? '';
 
@@ -131,7 +145,7 @@ class ApiService {
       }
       debugPrint('   Headers: $headers');
 
-      final response = await http.get(uri, headers: headers);
+      final response = await _client.get(uri, headers: headers);
 
       // Извлекаем CSRF токен из cookies или заголовков ответа
       _extractCsrfToken(response);
@@ -222,7 +236,7 @@ class ApiService {
         debugPrint('   Body: $requestBody');
       }
 
-      final response = await http.post(
+      final response = await _client.post(
         uri,
         headers: headers,
         body: requestBody,
@@ -281,8 +295,11 @@ class ApiService {
       final uri = Uri.parse(fullPath);
 
       final headers = <String, String>{
-        'Accept': 'application/json',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
         'Content-Type': 'application/json',
+        'Origin': baseUrl,
+        'Referer': '$baseUrl/',
       };
 
       if (requiresAuth) {
@@ -290,15 +307,34 @@ class ApiService {
         if (token != null) {
           headers['Authorization'] = 'Bearer $token';
         }
+        
+        // Добавляем cookies если они есть
+        if (_cookies.isNotEmpty) {
+          final cookieString = _cookies.entries
+              .map((e) => '${e.key}=${e.value}')
+              .join('; ');
+          headers['Cookie'] = cookieString;
+        }
       }
 
-      final response = await http.put(
+      final requestBody = body != null ? json.encode(body) : null;
+      
+      debugPrint('📤 [API] PUT $fullPath');
+      debugPrint('   Headers: $headers');
+      if (requestBody != null) {
+        debugPrint('   Body: $requestBody');
+      }
+
+      final response = await _client.put(
         uri,
         headers: headers,
-        body: body != null ? json.encode(body) : null,
+        body: requestBody,
       );
 
-      if (response.statusCode == 200) {
+      debugPrint('📥 [API] Response status: ${response.statusCode}');
+      debugPrint('   Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final responseBody = response.body.trim();
         if (responseBody.isEmpty || responseBody == 'OK') {
           return {'success': true, 'data': responseBody};
@@ -385,7 +421,7 @@ class ApiService {
         debugPrint('   Body: $requestBody');
       }
 
-      final response = await http.patch(
+      final response = await _client.patch(
         uri,
         headers: headers,
         body: requestBody,
@@ -891,6 +927,32 @@ class ApiService {
       );
     } catch (e) {
       debugPrint('Error marking notification as read: $e');
+      rethrow;
+    }
+  }
+
+  // Создание обращения в акимат
+  Future<Map<String, dynamic>> createAkimatAppeal({
+    required String userPhone,
+    required int typeId,
+    required String content,
+    required int akimatId,
+  }) async {
+    try {
+      final response = await post(
+        '/api/v3/rip-government/v1/appeal',
+        body: {
+          'userPhone': userPhone,
+          'typeId': typeId,
+          'content': content,
+          'akimatId': akimatId,
+        },
+        requiresAuth: true,
+      );
+      
+      return response;
+    } catch (e) {
+      debugPrint('Error creating akimat appeal: $e');
       rethrow;
     }
   }

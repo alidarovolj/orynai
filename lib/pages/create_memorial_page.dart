@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 import '../constants.dart';
 import '../services/api_service.dart';
 import '../widgets/header.dart';
 import '../models/burial_request.dart';
 import '../widgets/app_button.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CreateMemorialPage extends StatefulWidget {
   final int? burialRequestId;
@@ -103,41 +103,6 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
     }
   }
 
-  Future<void> _pickPhotos() async {
-    try {
-      final List<XFile> pickedFiles = await _imagePicker.pickMultiImage();
-      if (pickedFiles.isNotEmpty) {
-        setState(() {
-          _photos.addAll(pickedFiles.map((file) => File(file.path)));
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking photos: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка выбора фотографий')),
-        );
-      }
-    }
-  }
-
-  Future<void> _pickAchievements() async {
-    try {
-      final List<XFile> pickedFiles = await _imagePicker.pickMultiImage();
-      if (pickedFiles.isNotEmpty) {
-        setState(() {
-          _achievements.addAll(pickedFiles.map((file) => File(file.path)));
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking achievements: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка выбора файлов')),
-        );
-      }
-    }
-  }
 
   void _addVideoLink() {
     final link = _videoLinkController.text.trim();
@@ -405,6 +370,24 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
     );
   }
 
+  Future<void> _pickPhotos() async {
+    try {
+      final List<XFile> pickedFiles = await _imagePicker.pickMultiImage();
+      if (pickedFiles.isNotEmpty) {
+        setState(() {
+          _photos.addAll(pickedFiles.map((file) => File(file.path)));
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking photos: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ошибка выбора фотографий')),
+        );
+      }
+    }
+  }
+
   Widget _buildPhotoUploadSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -669,6 +652,24 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
         ],
       ],
     );
+  }
+
+  Future<void> _pickAchievements() async {
+    try {
+      final List<XFile> pickedFiles = await _imagePicker.pickMultiImage();
+      if (pickedFiles.isNotEmpty) {
+        setState(() {
+          _achievements.addAll(pickedFiles.map((file) => File(file.path)));
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking achievements: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ошибка выбора файлов')),
+        );
+      }
+    }
   }
 
   Widget _buildAchievementsSection() {

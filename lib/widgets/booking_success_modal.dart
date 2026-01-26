@@ -59,7 +59,7 @@ class _BookingSuccessModalState extends State<BookingSuccessModal> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => const ProfilePage(),
+        builder: (context) => const ProfilePage(initialTab: 2),
       ),
     );
   }
