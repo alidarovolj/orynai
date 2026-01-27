@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:async';
 import '../constants.dart';
 import '../pages/profile_page.dart';
@@ -95,8 +96,8 @@ class _BookingSuccessModalState extends State<BookingSuccessModal> {
             ),
             const SizedBox(height: AppSizes.paddingLarge),
             // Заголовок
-            const Text(
-              'Запрос отправлен',
+            Text(
+              'booking.success.requestSent'.tr(),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -106,8 +107,8 @@ class _BookingSuccessModalState extends State<BookingSuccessModal> {
             ),
             const SizedBox(height: AppSizes.paddingMedium),
             // Подзаголовок
-            const Text(
-              'Ожидайте подтверждения ...',
+            Text(
+              'booking.success.waitConfirmation'.tr(),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
@@ -118,7 +119,7 @@ class _BookingSuccessModalState extends State<BookingSuccessModal> {
             const SizedBox(height: AppSizes.paddingSmall),
             // Таймер
             Text(
-              'Перенаправление в личный кабинет через $_countdown',
+              'booking.success.redirecting'.tr(namedArgs: {'seconds': _countdown.toString()}),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -141,8 +142,8 @@ class _BookingSuccessModalState extends State<BookingSuccessModal> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'В личный кабинет',
+                child: Text(
+                  'booking.success.toProfile'.tr(),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as DatePicker;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -360,7 +361,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
           Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Товар успешно добавлен в корзину (ID: $cartId)'),
+              content: Text('catalog.addToCart.successMessage'.tr(namedArgs: {'id': cartId.toString()})),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
             ),
@@ -375,14 +376,14 @@ class _AddToCartModalState extends State<AddToCartModal> {
       debugPrint('   Ошибка: $e');
       debugPrint('   StackTrace: $stackTrace');
 
-      String errorMessage = 'Ошибка при добавлении в корзину';
+      String errorMessage = 'catalog.addToCart.errorAdd'.tr();
 
       if (e is ApiException) {
-        errorMessage = 'Ошибка: ${e.message}';
+        errorMessage = 'catalog.addToCart.errorAddDetail'.tr(namedArgs: {'message': e.message});
         debugPrint('   Status Code: ${e.statusCode}');
         debugPrint('   Body: ${e.body}');
       } else {
-        errorMessage = 'Ошибка: ${e.toString()}';
+        errorMessage = 'catalog.addToCart.errorAddDetail'.tr(namedArgs: {'message': e.toString()});
       }
 
       if (mounted) {
@@ -424,9 +425,9 @@ class _AddToCartModalState extends State<AddToCartModal> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Укажите данные',
-                    style: TextStyle(
+                  Text(
+                    'catalog.addToCart.enterData'.tr(),
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: AppColors.iconAndText,
@@ -442,9 +443,9 @@ class _AddToCartModalState extends State<AddToCartModal> {
               ),
               const SizedBox(height: AppSizes.paddingLarge),
               // Поле адреса
-              const Text(
-                'Введите адрес:',
-                style: TextStyle(
+              Text(
+                'catalog.addToCart.enterAddress'.tr(),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: AppColors.iconAndText,
@@ -455,7 +456,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
               TextField(
                 controller: _addressController,
                 decoration: InputDecoration(
-                  hintText: 'Тауғұл 1, дом 48',
+                  hintText: 'catalog.addToCart.addressHint'.tr(),
                   hintStyle: TextStyle(
                     color: AppColors.iconAndText.withOpacity(0.5),
                     fontSize: 16,
@@ -511,7 +512,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Использовать прошлый адрес',
+                        'catalog.addToCart.usePreviousAddress'.tr(),
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.buttonBackground,
@@ -525,9 +526,9 @@ class _AddToCartModalState extends State<AddToCartModal> {
               ],
               const SizedBox(height: AppSizes.paddingMedium),
               // Поле даты
-              const Text(
-                'Выберите дату:',
-                style: TextStyle(
+              Text(
+                'catalog.addToCart.selectDate'.tr(),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: AppColors.iconAndText,
@@ -540,7 +541,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
                 keyboardType: TextInputType.number,
                 onTap: () => _openDatePicker(context),
                 decoration: InputDecoration(
-                  hintText: 'дд.мм.гггг',
+                  hintText: 'catalog.addToCart.dateHint'.tr(),
                   hintStyle: TextStyle(
                     color: AppColors.iconAndText.withOpacity(0.5),
                     fontSize: 16,
@@ -586,9 +587,9 @@ class _AddToCartModalState extends State<AddToCartModal> {
               ),
               const SizedBox(height: AppSizes.paddingMedium),
               // Поле времени
-              const Text(
-                'Выберите время:',
-                style: TextStyle(
+              Text(
+                'catalog.addToCart.selectTime'.tr(),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: AppColors.iconAndText,
@@ -601,7 +602,7 @@ class _AddToCartModalState extends State<AddToCartModal> {
                 keyboardType: TextInputType.number,
                 onTap: () => _openTimePicker(context),
                 decoration: InputDecoration(
-                  hintText: 'чч:мм',
+                  hintText: 'catalog.addToCart.timeHint'.tr(),
                   hintStyle: TextStyle(
                     color: AppColors.iconAndText.withOpacity(0.5),
                     fontSize: 16,
@@ -674,9 +675,9 @@ class _AddToCartModalState extends State<AddToCartModal> {
                             ),
                           ),
                         )
-                      : const Text(
-                          'Подтвердить',
-                          style: TextStyle(
+                      : Text(
+                          'catalog.addToCart.confirm'.tr(),
+                          style: const TextStyle(
                             fontSize: 16,
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

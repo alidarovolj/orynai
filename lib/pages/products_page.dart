@@ -111,7 +111,7 @@ class _ProductsPageState extends State<ProductsPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки продуктов: $e')),
+          SnackBar(content: Text('catalog.products.loadProductsError'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -205,7 +205,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'Товары не найдены',
+                                    'catalog.products.noProducts'.tr(),
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: AppColors.iconAndText

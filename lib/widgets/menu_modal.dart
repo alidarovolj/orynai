@@ -134,7 +134,7 @@ class MenuModal extends StatelessWidget {
                       top: AppSizes.paddingLarge,
                     ),
                     child: AppButton(
-                      text: 'Корзина',
+                      text: 'menu.cart'.tr(),
                       onPressed: () {
                         Navigator.pop(context);
                         Navigator.push(
@@ -262,7 +262,7 @@ class MenuModal extends StatelessWidget {
                   return Column(
                     children: [
                       _buildDrawerMenuItem(
-                        text: 'Профиль',
+                        text: 'menu.profile'.tr(),
                         onTap: () {
                           Navigator.pop(context);
                           Navigator.push(

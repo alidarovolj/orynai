@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../widgets/header.dart';
 import '../widgets/contacts_block.dart';
@@ -84,8 +85,8 @@ class _AboutPageState extends State<AboutPage> {
                               height: 80,
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) {
-                                return const Text(
-                                  'ORYNAI',
+                                return Text(
+                                  'about.logoFallback'.tr(),
                                   style: TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.w700,
@@ -98,8 +99,8 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Главный заголовок
-                          const Text(
-                            'Мы цифровой сервис ритуальных услуг, поиска захоронений и мемориалов',
+                          Text(
+                            'about.mainHeadline'.tr(),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 24,
@@ -111,8 +112,8 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Вводный текст
-                          const Text(
-                            'ORYNAI - первая цифровая платформа в Казахстане, созданная для упрощения и систематизации ритуальных услуг, онлайн-поиска захоронений, бронирования мест на кладбищах и сохранения семейной истории в цифровом формате. Мы объединяем технологии, искусственный интеллект и уважение к памяти предков, чтобы каждый человек мог с удобством получить информацию и необходимые услуги онлайн.',
+                          Text(
+                            'about.intro'.tr(),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
@@ -142,9 +143,9 @@ class _AboutPageState extends State<AboutPage> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Наша цель —',
-                                        style: TextStyle(
+                                      Text(
+                                        'about.ourGoalTitle'.tr(),
+                                        style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
                                           color: Colors.white,
@@ -152,9 +153,9 @@ class _AboutPageState extends State<AboutPage> {
                                         ),
                                       ),
                                       const SizedBox(height: AppSizes.paddingSmall),
-                                      const Text(
-                                        'оцифровать сферу памяти и ритуальных услуг в Казахстане, сделать ее прозрачной, доступной и технологичной.',
-                                        style: TextStyle(
+                                      Text(
+                                        'about.ourGoalText'.tr(),
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w400,
                                           color: Colors.white,
@@ -170,8 +171,8 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Заголовок "Мы работаем, чтобы:"
-                          const Text(
-                            'Мы работаем, чтобы:',
+                          Text(
+                            'about.weWorkTo'.tr(),
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -181,29 +182,19 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingLarge),
                           // Маркированный список
-                          _buildBulletPoint(
-                            'каждый человек мог найти место захоронения онлайн,',
-                          ),
+                          _buildBulletPoint('about.bullet1'.tr()),
                           const SizedBox(height: AppSizes.paddingMedium),
-                          _buildBulletPoint(
-                            'города получили цифровые карты кладбищ и аналитические данные,',
-                          ),
+                          _buildBulletPoint('about.bullet2'.tr()),
                           const SizedBox(height: AppSizes.paddingMedium),
-                          _buildBulletPoint(
-                            'оформление ритуальных услуг происходило в несколько кликов',
-                          ),
+                          _buildBulletPoint('about.bullet3'.tr()),
                           const SizedBox(height: AppSizes.paddingMedium),
-                          _buildBulletPoint(
-                            'память о родных хранилась в цифровом мемориале навсегда',
-                          ),
+                          _buildBulletPoint('about.bullet4'.tr()),
                           const SizedBox(height: AppSizes.paddingMedium),
-                          _buildBulletPoint(
-                            'ИИ помогал на каждом этапе — от поиска данных до выбора услуг.',
-                          ),
+                          _buildBulletPoint('about.bullet5'.tr()),
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Центральный заголовок
-                          const Text(
-                            'ORYNAI – это место, где история семьи становится доступной, понятной и не теряется',
+                          Text(
+                            'about.familyHistoryHeadline'.tr(),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 24,
@@ -215,8 +206,8 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Заголовок "Наша цель" (центрированный)
-                          const Text(
-                            'Наша цель',
+                          Text(
+                            'about.ourGoal'.tr(),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 24,
@@ -227,8 +218,8 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingLarge),
                           // Описательный текст
-                          const Text(
-                            'Сделать Казахстан первой страной, где:',
+                          Text(
+                            'about.makeKzFirst'.tr(),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
@@ -238,25 +229,15 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingLarge),
                           // Карточки с целями
-                          _buildGoalCard(
-                            'все кладбища оцифрованы',
-                          ),
+                          _buildGoalCard('about.goal1'.tr()),
                           const SizedBox(height: AppSizes.paddingMedium),
-                          _buildGoalCard(
-                            'память о людях сохраняется и передаётся поколениям',
-                          ),
+                          _buildGoalCard('about.goal2'.tr()),
                           const SizedBox(height: AppSizes.paddingMedium),
-                          _buildGoalCard(
-                            'данные доступны онлайн',
-                          ),
+                          _buildGoalCard('about.goal3'.tr()),
                           const SizedBox(height: AppSizes.paddingMedium),
-                          _buildGoalCard(
-                            'ритуальная сфера регулируется и прозрачна',
-                          ),
+                          _buildGoalCard('about.goal4'.tr()),
                           const SizedBox(height: AppSizes.paddingMedium),
-                          _buildGoalCard(
-                            'искусственный интеллект делает сервис понятным и доступным каждому',
-                          ),
+                          _buildGoalCard('about.goal5'.tr()),
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Блок контактов
                           ContactsBlock(
@@ -289,7 +270,7 @@ class _AboutPageState extends State<AboutPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка открытия телефона')),
+          SnackBar(content: Text('errors.phoneNotAvailable'.tr())),
         );
       }
     }
@@ -304,7 +285,7 @@ class _AboutPageState extends State<AboutPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка открытия email')),
+          SnackBar(content: Text('errors.emailNotAvailable'.tr())),
         );
       }
     }
@@ -321,7 +302,7 @@ class _AboutPageState extends State<AboutPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка открытия ссылки')),
+          SnackBar(content: Text('errors.linkNotAvailable'.tr())),
         );
       }
     }
@@ -338,7 +319,7 @@ class _AboutPageState extends State<AboutPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка открытия ссылки')),
+          SnackBar(content: Text('errors.linkNotAvailable'.tr())),
         );
       }
     }
@@ -355,7 +336,7 @@ class _AboutPageState extends State<AboutPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка открытия ссылки')),
+          SnackBar(content: Text('errors.linkNotAvailable'.tr())),
         );
       }
     }

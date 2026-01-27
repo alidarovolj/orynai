@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import '../constants.dart';
 import '../models/cart_item.dart';
@@ -91,7 +92,7 @@ class _CartPageState extends State<CartPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка загрузки корзины: $e')));
+        ).showSnackBar(SnackBar(content: Text('catalog.cart.loadError'.tr(namedArgs: {'error': e.toString()}))));
       }
     }
   }
@@ -134,13 +135,13 @@ class _CartPageState extends State<CartPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Количество обновлено')));
+        ).showSnackBar(SnackBar(content: Text('catalog.cart.quantityUpdated'.tr())));
       }
     } catch (e) {
       debugPrint('Error updating quantity: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка обновления количества: $e')),
+          SnackBar(content: Text('catalog.cart.quantityUpdateError'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -156,7 +157,7 @@ class _CartPageState extends State<CartPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Ошибка удаления товара')));
+        ).showSnackBar(SnackBar(content: Text('catalog.cart.removeError'.tr())));
       }
     }
   }
@@ -166,7 +167,7 @@ class _CartPageState extends State<CartPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Корзина пуста')));
+        ).showSnackBar(SnackBar(content: Text('catalog.cart.emptyCart'.tr())));
       }
       return;
     }
@@ -217,9 +218,9 @@ class _CartPageState extends State<CartPage> {
             // После успешной оплаты возвращаемся назад
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Оплата успешно завершена'),
-                backgroundColor: Color(0xFF4CAF50),
+              SnackBar(
+                content: Text('catalog.cart.paymentSuccess'.tr()),
+                backgroundColor: const Color(0xFF4CAF50),
               ),
             );
           },
@@ -230,7 +231,7 @@ class _CartPageState extends State<CartPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка создания заказа: $e')));
+        ).showSnackBar(SnackBar(content: Text('catalog.cart.createOrderError'.tr(namedArgs: {'error': e.toString()}))));
       }
     }
   }
@@ -255,15 +256,15 @@ class _CartPageState extends State<CartPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Редактировать адрес'),
+        title: Text('catalog.cart.editAddress'.tr()),
         content: TextField(
           controller: _addressController,
-          decoration: const InputDecoration(hintText: 'Введите адрес'),
+          decoration: InputDecoration(hintText: 'catalog.cart.enterAddress'.tr()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
+            child: Text('catalog.cart.cancel'.tr()),
           ),
           TextButton(
             onPressed: () {
@@ -272,7 +273,7 @@ class _CartPageState extends State<CartPage> {
               });
               Navigator.pop(context);
             },
-            child: const Text('Сохранить'),
+            child: Text('catalog.cart.save'.tr()),
           ),
         ],
       ),
@@ -363,7 +364,7 @@ class _CartPageState extends State<CartPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Корзина ${_cartItems.length}',
+                                        'catalog.cart.title'.tr(namedArgs: {'count': '${_cartItems.length}'}),
                                         style: const TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.w700,
@@ -374,9 +375,9 @@ class _CartPageState extends State<CartPage> {
                                       const SizedBox(
                                         height: AppSizes.paddingLarge,
                                       ),
-                                      const Text(
-                                        'Дата получения',
-                                        style: TextStyle(
+                                      Text(
+                                        'catalog.cart.deliveryDate'.tr(),
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
                                           color: Color(0xFF1d1c1a),
@@ -407,9 +408,9 @@ class _CartPageState extends State<CartPage> {
                                           height: AppSizes.paddingLarge,
                                         ),
                                       ],
-                                      const Text(
-                                        'Адрес',
-                                        style: TextStyle(
+                                      Text(
+                                        'catalog.cart.address'.tr(),
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
                                           color: Color(0xFF1d1c1a),
@@ -431,9 +432,9 @@ class _CartPageState extends State<CartPage> {
                                       const SizedBox(
                                         height: AppSizes.paddingLarge,
                                       ),
-                                      const Text(
-                                        'Дополнительные комментарии',
-                                        style: TextStyle(
+                                      Text(
+                                        'catalog.cart.additionalComments'.tr(),
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
                                           color: Color(0xFF1d1c1a),
@@ -448,7 +449,7 @@ class _CartPageState extends State<CartPage> {
                                         maxLines: 4,
                                         decoration: InputDecoration(
                                           hintText:
-                                              'Дополнительные комментарии',
+                                              'catalog.cart.additionalComments'.tr(),
                                           hintStyle: TextStyle(
                                             color: AppColors.accordionBorder,
                                             fontFamily: 'Manrope',
@@ -496,9 +497,9 @@ class _CartPageState extends State<CartPage> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Text(
-                                            'Итого',
-                                            style: TextStyle(
+                                          Text(
+                                            'catalog.cart.total'.tr(),
+                                            style: const TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.w700,
                                               color: Color(0xFF1d1c1a),
@@ -520,7 +521,7 @@ class _CartPageState extends State<CartPage> {
                                         height: AppSizes.paddingLarge,
                                       ),
                                       AppButton(
-                                        text: 'Оплатить',
+                                        text: 'catalog.cart.pay'.tr(),
                                         onPressed: _createOrder,
                                         backgroundColor:
                                             AppColors.buttonBackground,
@@ -529,7 +530,7 @@ class _CartPageState extends State<CartPage> {
                                         height: AppSizes.paddingMedium,
                                       ),
                                       AppButton(
-                                        text: 'Назад',
+                                        text: 'catalog.cart.back'.tr(),
                                         onPressed: () {
                                           Navigator.pop(context);
                                         },
@@ -551,9 +552,9 @@ class _CartPageState extends State<CartPage> {
                                       const SizedBox(
                                         height: AppSizes.paddingLarge,
                                       ),
-                                      const Text(
-                                        'Дополнительные услуги',
-                                        style: TextStyle(
+                                      Text(
+                                        'catalog.cart.additionalServices'.tr(),
+                                        style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
                                           color: Color(0xFF1d1c1a),

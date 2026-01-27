@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../models/category.dart';
 import '../services/api_service.dart';
@@ -128,9 +129,9 @@ class _ProductsFilterBlockState extends State<ProductsFilterBlock> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Категория
-          const Text(
-            'Категория',
-            style: TextStyle(
+          Text(
+            'catalog.filters.category'.tr(),
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColors.iconAndText,
@@ -149,9 +150,9 @@ class _ProductsFilterBlockState extends State<ProductsFilterBlock> {
               child: DropdownButton<int?>(
                 isExpanded: true,
                 value: _isLoadingCategories ? null : _selectedCategoryId,
-                hint: const Text(
-                  'Все категории',
-                  style: TextStyle(fontSize: 14, color: AppColors.iconAndText),
+                hint: Text(
+                  'catalog.filters.allCategories'.tr(),
+                  style: const TextStyle(fontSize: 14, color: AppColors.iconAndText),
                 ),
                 icon: Icon(
                   Icons.keyboard_arrow_down,
@@ -165,9 +166,9 @@ class _ProductsFilterBlockState extends State<ProductsFilterBlock> {
                 items: _isLoadingCategories
                     ? []
                     : [
-                        const DropdownMenuItem<int?>(
+                        DropdownMenuItem<int?>(
                           value: null,
-                          child: Text('Все категории'),
+                          child: Text('catalog.filters.allCategories'.tr()),
                         ),
                         ..._categories.map((category) {
                           return DropdownMenuItem<int?>(
@@ -189,9 +190,9 @@ class _ProductsFilterBlockState extends State<ProductsFilterBlock> {
           ),
           const SizedBox(height: 16),
           // Город
-          const Text(
-            'Город',
-            style: TextStyle(
+          Text(
+            'catalog.filters.city'.tr(),
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColors.iconAndText,
@@ -233,9 +234,9 @@ class _ProductsFilterBlockState extends State<ProductsFilterBlock> {
           ),
           const SizedBox(height: 16),
           // Цена
-          const Text(
-            'Цена',
-            style: TextStyle(
+          Text(
+            'catalog.filters.price'.tr(),
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColors.iconAndText,
@@ -248,7 +249,7 @@ class _ProductsFilterBlockState extends State<ProductsFilterBlock> {
                 child: TextField(
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    hintText: 'От',
+                    hintText: 'catalog.filters.from'.tr(),
                     hintStyle: TextStyle(
                       color: AppColors.iconAndText.withOpacity(0.5),
                     ),
@@ -294,7 +295,7 @@ class _ProductsFilterBlockState extends State<ProductsFilterBlock> {
                     text: _maxPrice?.toString() ?? '',
                   ),
                   decoration: InputDecoration(
-                    hintText: 'До',
+                    hintText: 'catalog.filters.to'.tr(),
                     hintStyle: TextStyle(
                       color: AppColors.iconAndText.withOpacity(0.5),
                     ),
@@ -353,9 +354,9 @@ class _ProductsFilterBlockState extends State<ProductsFilterBlock> {
                 ),
                 backgroundColor: Colors.white,
               ),
-              child: const Text(
-                'Сбросить фильтры',
-                style: TextStyle(fontSize: 14, color: AppColors.iconAndText),
+              child: Text(
+                'catalog.filters.resetFilters'.tr(),
+                style: const TextStyle(fontSize: 14, color: AppColors.iconAndText),
               ),
             ),
           ),

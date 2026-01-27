@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../services/api_service.dart';
 import '../services/auth_state_manager.dart';
@@ -91,7 +92,7 @@ class _ProfilePageState extends State<ProfilePage>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка загрузки данных: $e')));
+        ).showSnackBar(SnackBar(content: Text('profile.errors.loadData'.tr(namedArgs: {'error': e.toString()}))));
       }
     }
   }
@@ -163,13 +164,13 @@ class _ProfilePageState extends State<ProfilePage>
                       fontFamily: 'Manrope',
                     ),
                     tabAlignment: TabAlignment.start,
-                    tabs: const [
-                      Tab(text: 'Личные данные'),
-                      Tab(text: 'Заказы'),
-                      Tab(text: 'Заявки на захоронение'),
-                      Tab(text: 'Уведомления'),
-                      Tab(text: 'Обращения в акимат'),
-                      Tab(text: 'Запрос на перезахоронение'),
+                    tabs: [
+                      Tab(text: 'profile.tabs.personalData'.tr()),
+                      Tab(text: 'profile.tabs.orders'.tr()),
+                      Tab(text: 'profile.tabs.burialRequests'.tr()),
+                      Tab(text: 'profile.tabs.notifications'.tr()),
+                      Tab(text: 'profile.tabs.akimatAppeals'.tr()),
+                      Tab(text: 'profile.tabs.reburialRequest'.tr()),
                     ],
                   ),
                 ),
@@ -201,11 +202,11 @@ class _ProfilePageState extends State<ProfilePage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDataRow(label: 'ФИО', value: _fullName ?? '—'),
+          _buildDataRow(label: 'profile.fullName'.tr(), value: _fullName ?? 'profile.emptyValue'.tr()),
           const SizedBox(height: AppSizes.paddingLarge),
-          _buildDataRow(label: 'ИИН', value: _iin ?? '—'),
+          _buildDataRow(label: 'profile.iin'.tr(), value: _iin ?? 'profile.emptyValue'.tr()),
           const SizedBox(height: AppSizes.paddingLarge),
-          _buildDataRow(label: 'Телефон', value: _formatPhone(_phone)),
+          _buildDataRow(label: 'profile.phone'.tr(), value: _formatPhone(_phone)),
         ],
       ),
     );
@@ -285,7 +286,7 @@ class _ProfilePageState extends State<ProfilePage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Заказ №${order.id}',
+                'profile.orderNumber'.tr(namedArgs: {'id': order.id.toString()}),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -305,9 +306,9 @@ class _ProfilePageState extends State<ProfilePage>
                 ),
                 child: Text(
                   order.status == 'new'
-                      ? 'Новый'
+                      ? 'profile.orderStatusNew'.tr()
                       : order.status == 'pending_payment'
-                          ? 'Ожидает оплаты'
+                          ? 'profile.orderStatusPendingPayment'.tr()
                           : order.status,
                   style: const TextStyle(
                     fontSize: 12,
@@ -321,7 +322,7 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           const SizedBox(height: AppSizes.paddingSmall),
           Text(
-            'Дата: $createdAt',
+            'profile.date'.tr(namedArgs: {'date': createdAt}),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w400,
@@ -331,7 +332,7 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           const SizedBox(height: AppSizes.paddingSmall),
           Text(
-            'Сумма: ${order.totalPrice} ₸',
+            'profile.amount'.tr(namedArgs: {'amount': order.totalPrice.toString()}),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -345,7 +346,7 @@ class _ProfilePageState extends State<ProfilePage>
             return Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                '${item.product?.name ?? 'Товар'} x${item.quantity}',
+                '${item.product?.name ?? 'profile.product'.tr()} x${item.quantity}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -431,11 +432,11 @@ class _ProfilePageState extends State<ProfilePage>
                 ),
                 child: Text(
                   request.status == 'pending'
-                      ? 'Ожидает'
+                      ? 'profile.requestStatusPending'.tr()
                       : request.status == 'completed'
-                          ? 'Завершена'
+                          ? 'profile.requestStatusCompleted'.tr()
                           : request.status == 'cancelled'
-                              ? 'Отменена'
+                              ? 'profile.requestStatusCancelled'.tr()
                               : request.status,
                   style: const TextStyle(
                     fontSize: 12,
@@ -448,31 +449,31 @@ class _ProfilePageState extends State<ProfilePage>
             ],
           ),
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Кладбище', request.cemeteryName),
+          _buildInfoRow('profile.cemetery'.tr(), request.cemeteryName),
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Сектор', request.sectorNumber),
+          _buildInfoRow('profile.sector'.tr(), request.sectorNumber),
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Ряд', request.rowNumber),
+          _buildInfoRow('profile.row'.tr(), request.rowNumber),
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Место', request.graveNumber),
+          _buildInfoRow('profile.place'.tr(), request.graveNumber),
           if (request.deceased != null) ...[
             const SizedBox(height: AppSizes.paddingSmall),
             _buildInfoRow(
-              'Умерший',
+              'profile.deceased'.tr(),
               request.deceased!.fullName,
             ),
           ],
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Дата создания', createdAt),
+          _buildInfoRow('profile.createdAt'.tr(), createdAt),
           if (reservationExpires.isNotEmpty) ...[
             const SizedBox(height: AppSizes.paddingSmall),
-            _buildInfoRow('Резервация до', reservationExpires),
+            _buildInfoRow('profile.reservationUntil'.tr(), reservationExpires),
           ],
           // Кнопка "Создать мемориал" только для статуса "pending"
           if (request.status == 'pending') ...[
             const SizedBox(height: AppSizes.paddingMedium),
             AppButton(
-              text: 'Создать мемориал',
+              text: 'profile.createMemorial'.tr(),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -572,7 +573,7 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки заказов: $e')),
+          SnackBar(content: Text('profile.errors.loadOrders'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -585,9 +586,9 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
     }
 
     if (_orders.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'Заказов пока нет',
+          'profile.noOrders'.tr(),
           style: TextStyle(
             fontSize: 16,
             color: AppColors.accordionBorder,
@@ -637,7 +638,7 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Заказ №${order.id}',
+                'profile.orderNumber'.tr(namedArgs: {'id': order.id.toString()}),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -657,9 +658,9 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
                 ),
                 child: Text(
                   order.status == 'new'
-                      ? 'Новый'
+                      ? 'profile.orderStatusNew'.tr()
                       : order.status == 'pending_payment'
-                          ? 'Ожидает оплаты'
+                          ? 'profile.orderStatusPendingPayment'.tr()
                           : order.status,
                   style: const TextStyle(
                     fontSize: 12,
@@ -673,7 +674,7 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
           ),
           const SizedBox(height: AppSizes.paddingSmall),
           Text(
-            'Дата: $createdAt',
+            'profile.date'.tr(namedArgs: {'date': createdAt}),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w400,
@@ -683,7 +684,7 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
           ),
           const SizedBox(height: AppSizes.paddingSmall),
           Text(
-            'Сумма: ${order.totalPrice} ₸',
+            'profile.amount'.tr(namedArgs: {'amount': order.totalPrice.toString()}),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -697,7 +698,7 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
             return Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                '${item.product?.name ?? 'Товар'} x${item.quantity}',
+                '${item.product?.name ?? 'profile.product'.tr()} x${item.quantity}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -772,7 +773,7 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки заявок: $e')),
+          SnackBar(content: Text('profile.errors.loadRequests'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -785,9 +786,9 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
     }
 
     if (_requests.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'Заявок на захоронение пока нет',
+          'profile.noBurialRequests'.tr(),
           style: TextStyle(
             fontSize: 16,
             color: AppColors.accordionBorder,
@@ -871,11 +872,11 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
                 ),
                 child: Text(
                   request.status == 'pending'
-                      ? 'Ожидает'
+                      ? 'profile.requestStatusPending'.tr()
                       : request.status == 'completed'
-                          ? 'Завершена'
+                          ? 'profile.requestStatusCompleted'.tr()
                           : request.status == 'cancelled'
-                              ? 'Отменена'
+                              ? 'profile.requestStatusCancelled'.tr()
                               : request.status,
                   style: const TextStyle(
                     fontSize: 12,
@@ -888,31 +889,31 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
             ],
           ),
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Кладбище', request.cemeteryName),
+          _buildInfoRow('profile.cemetery'.tr(), request.cemeteryName),
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Сектор', request.sectorNumber),
+          _buildInfoRow('profile.sector'.tr(), request.sectorNumber),
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Ряд', request.rowNumber),
+          _buildInfoRow('profile.row'.tr(), request.rowNumber),
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Место', request.graveNumber),
+          _buildInfoRow('profile.place'.tr(), request.graveNumber),
           if (request.deceased != null) ...[
             const SizedBox(height: AppSizes.paddingSmall),
             _buildInfoRow(
-              'Умерший',
+              'profile.deceased'.tr(),
               request.deceased!.fullName,
             ),
           ],
           const SizedBox(height: AppSizes.paddingSmall),
-          _buildInfoRow('Дата создания', createdAt),
+          _buildInfoRow('profile.createdAt'.tr(), createdAt),
           if (reservationExpires.isNotEmpty) ...[
             const SizedBox(height: AppSizes.paddingSmall),
-            _buildInfoRow('Резервация до', reservationExpires),
+            _buildInfoRow('profile.reservationUntil'.tr(), reservationExpires),
           ],
           // Кнопка "Создать мемориал" только для статуса "pending"
           if (request.status == 'pending') ...[
             const SizedBox(height: AppSizes.paddingMedium),
             AppButton(
-              text: 'Создать мемориал',
+              text: 'profile.createMemorial'.tr(),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -976,13 +977,13 @@ class NotificationsListWidget extends StatefulWidget {
 class _NotificationsListWidgetState extends State<NotificationsListWidget> {
   List<models.Notification> _notifications = [];
   bool _isLoading = true;
-  String _selectedServiceType = 'Все';
+  String _selectedServiceType = 'all';
   int _limit = 10;
   int _offset = 0;
   int _total = 0;
   bool _hasMore = true;
 
-  final List<String> _serviceTypes = ['Все', 'supplier-service', 'burial-request-service'];
+  final List<String> _serviceTypes = ['all', 'supplier-service', 'burial-request-service'];
 
   @override
   void initState() {
@@ -999,7 +1000,7 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
     }
 
     try {
-      final serviceName = _selectedServiceType == 'Все' ? null : _selectedServiceType;
+      final serviceName = _selectedServiceType == 'all' ? null : _selectedServiceType;
       final response = await widget.apiService.getNotifications(
         limit: _limit,
         offset: loadMore ? _offset : 0,
@@ -1026,7 +1027,7 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки уведомлений: $e')),
+          SnackBar(content: Text('profile.errors.loadNotifications'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -1044,9 +1045,9 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
       await _loadNotifications();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Все уведомления помечены как прочитанные'),
-            backgroundColor: Color(0xFF4CAF50),
+          SnackBar(
+            content: Text('profile.allMarkedAsRead'.tr()),
+            backgroundColor: const Color(0xFF4CAF50),
           ),
         );
       }
@@ -1054,7 +1055,7 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
       debugPrint('Error marking all as read: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text('profile.errors.generic'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -1088,7 +1089,7 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
 
   String _getNotificationTitle(models.Notification notification) {
     // Формируем заголовок как "Уведомление - {subject} - {номер}"
-    String title = 'Уведомление - ${notification.subject}';
+    String title = 'profile.notificationTitle'.tr(namedArgs: {'subject': notification.subject});
     
     // Извлекаем номер из data
     if (notification.data.containsKey('order_id')) {
@@ -1110,8 +1111,8 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'УВЕДОМЛЕНИЯ',
+              Text(
+                'profile.notificationsTitle'.tr(),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -1132,8 +1133,8 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: const Text(
-                    'Пометить все как прочитанные',
+                  child: Text(
+                    'profile.markAllAsRead'.tr(),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1151,8 +1152,8 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Тип сервиса:',
+                        Text(
+                          'profile.serviceType'.tr(),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -1177,7 +1178,7 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
                               return DropdownMenuItem<String>(
                                 value: type,
                                 child: Text(
-                                  type,
+                                  type == 'all' ? 'profile.all'.tr() : type,
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontFamily: 'Manrope',
@@ -1203,8 +1204,8 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Показать по:',
+                        Text(
+                          'profile.showPer'.tr(),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -1260,9 +1261,9 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _notifications.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'Уведомлений пока нет',
+                        'profile.noNotifications'.tr(),
                         style: TextStyle(
                           fontSize: 16,
                           color: AppColors.accordionBorder,
@@ -1285,8 +1286,8 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
                               child: Center(
                                 child: TextButton(
                                   onPressed: () => _loadNotifications(loadMore: true),
-                                  child: const Text(
-                                    'Загрузить еще',
+                                  child: Text(
+                                    'profile.loadMore'.tr(),
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontFamily: 'Manrope',
@@ -1307,8 +1308,8 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
         if (!_isLoading && _notifications.isNotEmpty && !_hasMore)
           Padding(
             padding: const EdgeInsets.all(AppSizes.paddingMedium),
-            child: const Text(
-              'Все уведомления загружены',
+            child: Text(
+              'profile.allNotificationsLoaded'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.accordionBorder,
@@ -1409,9 +1410,9 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
   final int _maxContentLength = 3500;
 
   final List<Map<String, dynamic>> _appealTypes = [
-    {'id': 1, 'name': 'Жалоба'},
-    {'id': 2, 'name': 'Предложение'},
-    {'id': 3, 'name': 'Запросы информации'},
+    {'id': 1, 'nameKey': 'profile.appealTypes.complaint'},
+    {'id': 2, 'nameKey': 'profile.appealTypes.suggestion'},
+    {'id': 3, 'nameKey': 'profile.appealTypes.infoRequest'},
   ];
 
   @override
@@ -1423,7 +1424,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
   Future<void> _createAppeal() async {
     if (_selectedTypeId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Выберите тип обращения')),
+        SnackBar(content: Text('profile.selectAppealType'.tr())),
       );
       return;
     }
@@ -1431,14 +1432,14 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
     final content = _contentController.text.trim();
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите текст обращения')),
+        SnackBar(content: Text('profile.enterAppealText'.tr())),
       );
       return;
     }
 
     if (content.length > _maxContentLength) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Текст обращения не должен превышать $_maxContentLength символов')),
+        SnackBar(content: Text('profile.appealTextMaxLength'.tr(namedArgs: {'max': _maxContentLength.toString()}))),
       );
       return;
     }
@@ -1452,7 +1453,13 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
       final userPhone = authManager.currentUser?.phone ?? '';
 
       if (userPhone.isEmpty) {
-        throw Exception('Не удалось получить номер телефона пользователя');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('profile.errors.userPhoneNotAvailable'.tr())),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
       }
 
       await widget.apiService.createAkimatAppeal(
@@ -1464,9 +1471,9 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Обращение успешно создано'),
-            backgroundColor: Color(0xFF4CAF50),
+          SnackBar(
+            content: Text('profile.appealCreatedSuccess'.tr()),
+            backgroundColor: const Color(0xFF4CAF50),
           ),
         );
         
@@ -1479,7 +1486,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
     } catch (e) {
       debugPrint('Error creating akimat appeal: $e');
       if (mounted) {
-        String errorMessage = 'Ошибка создания обращения';
+        String errorMessage = 'profile.errors.createAppeal'.tr();
         
         if (e is ApiException) {
           errorMessage = e.message;
@@ -1487,7 +1494,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
             errorMessage = e.body!['message'].toString();
           }
         } else {
-          errorMessage = 'Ошибка создания обращения: ${e.toString()}';
+          errorMessage = 'profile.errors.createAppealWithError'.tr(namedArgs: {'error': e.toString()});
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1514,8 +1521,8 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Заголовок
-          const Text(
-            'СОЗДАНИЕ ОБРАЩЕНИЯ В АКИМАТ',
+          Text(
+            'profile.createAkimatAppealTitle'.tr(),
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -1525,8 +1532,8 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
           ),
           const SizedBox(height: AppSizes.paddingXLarge),
           // Поле "Тип обращения"
-          const Text(
-            'Тип обращения',
+          Text(
+            'profile.appealType'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -1549,7 +1556,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
               isExpanded: true,
               underline: const SizedBox(),
               hint: Text(
-                'Выберите тип обращения',
+                'profile.selectAppealType'.tr(),
                 style: TextStyle(
                   color: AppColors.accordionBorder,
                   fontFamily: 'Manrope',
@@ -1559,7 +1566,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
                 return DropdownMenuItem<int>(
                   value: type['id'] as int,
                   child: Text(
-                    type['name'] as String,
+                    (type['nameKey'] as String).tr(),
                     style: const TextStyle(
                       fontSize: 16,
                       color: Color(0xFF1d1c1a),
@@ -1577,8 +1584,8 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
           ),
           const SizedBox(height: AppSizes.paddingXLarge),
           // Поле "Обращение"
-          const Text(
-            'Обращение',
+          Text(
+            'profile.appeal'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -1600,7 +1607,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
               maxLines: 10,
               maxLength: _maxContentLength,
               decoration: InputDecoration(
-                hintText: 'Введите текст обращения',
+                hintText: 'profile.enterAppealText'.tr(),
                 hintStyle: TextStyle(
                   color: AppColors.accordionBorder,
                   fontFamily: 'Manrope',
@@ -1647,9 +1654,9 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Создать обращение',
-                      style: TextStyle(
+                  : Text(
+                      'profile.createAppeal'.tr(),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -1714,7 +1721,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки кладбищ: $e')),
+          SnackBar(content: Text('profile.errors.loadCemeteries'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -1744,13 +1751,13 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
     } catch (e) {
       debugPrint('Error picking file: $e');
       if (mounted) {
-        String errorMessage = 'Ошибка выбора файла';
+        String errorMessage = 'profile.errors.filePick'.tr();
         
         if (e.toString().contains('channel-error') || 
             e.toString().contains('Unable to establish connection')) {
-          errorMessage = 'Не удалось открыть галерею. Проверьте разрешения приложения.';
+          errorMessage = 'profile.errors.galleryOpen'.tr();
         } else if (e.toString().contains('permission')) {
-          errorMessage = 'Необходимо разрешение на доступ к галерее';
+          errorMessage = 'profile.errors.galleryPermission'.tr();
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1873,8 +1880,8 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
                     color: AppColors.accordionBorder,
                   ),
                   const SizedBox(height: AppSizes.paddingMedium),
-                  const Text(
-                    'Загрузите файлы',
+                  Text(
+                    'profile.uploadFiles'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -1884,7 +1891,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
                   ),
                   const SizedBox(height: AppSizes.paddingSmall),
                   Text(
-                    'Перетащите файлы или загрузите файлы',
+                    'profile.uploadFilesHint'.tr(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -1895,7 +1902,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
                   ),
                   const SizedBox(height: AppSizes.paddingMedium),
                   AppButton(
-                    text: 'Загрузить',
+                    text: 'profile.upload'.tr(),
                     onPressed: onPickFile,
                     isOutlined: true,
                   ),
@@ -1910,14 +1917,14 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
   Future<void> _submitRequest() async {
     if (_oldCemetery == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Выберите старое место захоронения')),
+        SnackBar(content: Text('profile.errors.selectOldBurialPlace'.tr())),
       );
       return;
     }
 
     if (_newCemetery == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Выберите новое место захоронения')),
+        SnackBar(content: Text('profile.errors.selectNewBurialPlace'.tr())),
       );
       return;
     }
@@ -1925,28 +1932,28 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
     final reason = _reasonController.text.trim();
     if (reason.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите причину перезахоронения')),
+        SnackBar(content: Text('profile.errors.enterReburialReason'.tr())),
       );
       return;
     }
 
     if (_deathCertificateFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Загрузите свидетельство о смерти')),
+        SnackBar(content: Text('profile.errors.uploadDeathCertificate'.tr())),
       );
       return;
     }
 
     if (_kinshipConfirmationFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Загрузите подтверждение родства')),
+        SnackBar(content: Text('profile.errors.uploadKinshipConfirmation'.tr())),
       );
       return;
     }
 
     if (_graveDocumentFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Загрузите документ на могилу')),
+        SnackBar(content: Text('profile.errors.uploadGraveDocument'.tr())),
       );
       return;
     }
@@ -1961,9 +1968,9 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Запрос на перезахоронение успешно создан'),
-            backgroundColor: Color(0xFF4CAF50),
+          SnackBar(
+            content: Text('profile.reburialRequestCreatedSuccess'.tr()),
+            backgroundColor: const Color(0xFF4CAF50),
           ),
         );
         
@@ -1982,7 +1989,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Ошибка создания запроса: ${e.toString()}'),
+            content: Text('profile.errors.createRequest'.tr(namedArgs: {'error': e.toString()})),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -2004,8 +2011,8 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Заголовок
-          const Text(
-            'СОЗДАНИЕ ЗАПРОСА НА ПЕРЕЗАХОРОНЕНИЕ',
+          Text(
+            'profile.createReburialTitle'.tr(),
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -2015,8 +2022,8 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
           ),
           const SizedBox(height: AppSizes.paddingXLarge),
           // Старое место захоронения
-          const Text(
-            'Старое место захоронения:',
+          Text(
+            'profile.oldBurialPlace'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -2039,7 +2046,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
               isExpanded: true,
               underline: const SizedBox(),
               hint: Text(
-                'Выберите кладбище',
+                'profile.selectCemetery'.tr(),
                 style: TextStyle(
                   color: AppColors.accordionBorder,
                   fontFamily: 'Manrope',
@@ -2069,8 +2076,8 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
           ),
           const SizedBox(height: AppSizes.paddingXLarge),
           // Новое место захоронения
-          const Text(
-            'Новое место захоронения:',
+          Text(
+            'profile.newBurialPlace'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -2093,7 +2100,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
               isExpanded: true,
               underline: const SizedBox(),
               hint: Text(
-                'Выберите кладбище',
+                'profile.selectCemetery'.tr(),
                 style: TextStyle(
                   color: AppColors.accordionBorder,
                   fontFamily: 'Manrope',
@@ -2123,8 +2130,8 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
           ),
           const SizedBox(height: AppSizes.paddingXLarge),
           // Причина
-          const Text(
-            'Причина:',
+          Text(
+            'profile.reason'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -2146,7 +2153,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
               maxLines: 5,
               maxLength: _maxReasonLength,
               decoration: InputDecoration(
-                hintText: 'Причина перезахоронения...',
+                hintText: 'profile.reasonHint'.tr(),
                 hintStyle: TextStyle(
                   color: AppColors.accordionBorder,
                   fontFamily: 'Manrope',
@@ -2168,7 +2175,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
           const SizedBox(height: AppSizes.paddingXLarge),
           // Свидетельство о смерти
           _buildFileUploadSection(
-            title: 'Свидетельство о смерти:',
+            title: 'profile.deathCertificate'.tr(),
             file: _deathCertificateFile,
             onPickFile: () => _pickFile(FileType.deathCertificate),
             onRemoveFile: () => _removeFile(FileType.deathCertificate),
@@ -2176,7 +2183,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
           const SizedBox(height: AppSizes.paddingXLarge),
           // Подтверждение родства заявителя
           _buildFileUploadSection(
-            title: 'Подтверждение родства заявителя:',
+            title: 'profile.kinshipConfirmation'.tr(),
             file: _kinshipConfirmationFile,
             onPickFile: () => _pickFile(FileType.kinshipConfirmation),
             onRemoveFile: () => _removeFile(FileType.kinshipConfirmation),
@@ -2184,7 +2191,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
           const SizedBox(height: AppSizes.paddingXLarge),
           // Документ на могилу
           _buildFileUploadSection(
-            title: 'Документ на могилу:',
+            title: 'profile.graveDocument'.tr(),
             file: _graveDocumentFile,
             onPickFile: () => _pickFile(FileType.graveDocument),
             onRemoveFile: () => _removeFile(FileType.graveDocument),
@@ -2216,9 +2223,9 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Создать запрос в акимат',
-                      style: TextStyle(
+                  : Text(
+                      'profile.createReburialRequest'.tr(),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,

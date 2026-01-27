@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../models/cemetery.dart';
 import '../services/cemetery_service.dart';
@@ -25,7 +26,31 @@ class _CemeteriesPageState extends State<CemeteriesPage> {
   bool _isLoading = true;
   bool _isScrolled = false;
   String? _selectedReligion;
-  final List<String> _religions = ['Все', 'Ислам', 'Христианство'];
+  final List<String> _religionKeys = ['all', 'islam', 'christianity'];
+  
+  String _getReligionDisplayName(String key) {
+    switch (key) {
+      case 'all':
+        return 'booking.cemeteries.all'.tr();
+      case 'islam':
+        return 'booking.cemeteries.islam'.tr();
+      case 'christianity':
+        return 'booking.cemeteries.christianity'.tr();
+      default:
+        return key;
+    }
+  }
+  
+  String _getReligionApiValue(String key) {
+    switch (key) {
+      case 'islam':
+        return 'Ислам';
+      case 'christianity':
+        return 'Христианство';
+      default:
+        return '';
+    }
+  }
 
   @override
   void initState() {
@@ -69,7 +94,7 @@ class _CemeteriesPageState extends State<CemeteriesPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка загрузки: $e')));
+        ).showSnackBar(SnackBar(content: Text('booking.cemeteries.loadError'.tr(namedArgs: {'error': e.toString()}))));
       }
     }
   }
@@ -77,11 +102,12 @@ class _CemeteriesPageState extends State<CemeteriesPage> {
   void _filterByReligion(String? religion) {
     setState(() {
       _selectedReligion = religion;
-      if (religion == null || religion == 'Все') {
+      if (religion == null || religion == 'all') {
         _filteredCemeteries = _allCemeteries;
       } else {
+        final apiReligion = _getReligionApiValue(religion);
         _filteredCemeteries = _allCemeteries
-            .where((cemetery) => cemetery.religion == religion)
+            .where((cemetery) => cemetery.religion == apiReligion)
             .toList();
       }
     });
@@ -151,8 +177,8 @@ class _CemeteriesPageState extends State<CemeteriesPage> {
                                 horizontal: AppSizes.paddingMedium,
                                 vertical: AppSizes.paddingLarge,
                               ),
-                              child: const Text(
-                                'Забронировать место',
+                              child: Text(
+                                'booking.cemeteries.title'.tr(),
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w700,
@@ -209,8 +235,8 @@ class _CemeteriesPageState extends State<CemeteriesPage> {
                                 child: DropdownButton<String>(
                                   isExpanded: true,
                                   value: _selectedReligion,
-                                  hint: const Text(
-                                    'Религия',
+                                  hint: Text(
+                                    'booking.cemeteries.religion'.tr(),
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: AppColors.iconAndText,
@@ -226,10 +252,10 @@ class _CemeteriesPageState extends State<CemeteriesPage> {
                                     fontSize: 16,
                                     color: AppColors.iconAndText,
                                   ),
-                                  items: _religions.map((String religion) {
+                                  items: _religionKeys.map((String key) {
                                     return DropdownMenuItem<String>(
-                                      value: religion,
-                                      child: Text(religion),
+                                      value: key,
+                                      child: Text(_getReligionDisplayName(key)),
                                     );
                                   }).toList(),
                                   onChanged: _filterByReligion,
@@ -243,7 +269,7 @@ class _CemeteriesPageState extends State<CemeteriesPage> {
                                 vertical: 16,
                               ),
                               child: Text(
-                                '${_filteredCemeteries.length} результатов',
+                                'booking.cemeteries.results'.tr(namedArgs: {'count': _filteredCemeteries.length.toString()}),
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: Color.fromRGBO(34, 34, 34, 1),

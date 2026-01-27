@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
@@ -63,7 +64,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Телефон недоступен')));
+        ).showSnackBar(SnackBar(content: Text('errors.phoneNotAvailable'.tr())));
       }
     }
   }
@@ -78,7 +79,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Email недоступен')));
+        ).showSnackBar(SnackBar(content: Text('errors.emailNotAvailable'.tr())));
       }
     }
   }
@@ -95,7 +96,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Ссылка недоступна')));
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
       }
     }
   }
@@ -112,7 +113,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Ссылка недоступна')));
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
       }
     }
   }
@@ -129,7 +130,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Ссылка недоступна')));
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
       }
     }
   }
@@ -292,17 +293,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                 ),
                                 elevation: 0,
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.shopping_cart_outlined,
                                     size: 20,
                                     color: Colors.white,
                                   ),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Text(
-                                    'Добавить',
+                                    'catalog.productDetails.add'.tr(),
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.white,
@@ -324,7 +325,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Описание',
+                                'catalog.productDetails.description'.tr(),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
@@ -334,36 +335,36 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               ),
                               const SizedBox(height: 16),
                               _buildDescriptionRow(
-                                'Категория',
+                                'catalog.productDetails.category'.tr(),
                                 widget.product.description,
                                 isLast: false,
                               ),
                               _buildDescriptionRow(
-                                'Тип изделия',
+                                'catalog.productDetails.productType'.tr(),
                                 widget.product.type == 'product'
-                                    ? 'Товар'
-                                    : 'Услуга',
+                                    ? 'catalog.productDetails.product'.tr()
+                                    : 'catalog.productDetails.service'.tr(),
                                 isLast: false,
                               ),
                               if (widget.product.deliveryMethod != null)
                                 _buildDescriptionRow(
-                                  'Способ доставки',
+                                  'catalog.productDetails.deliveryMethod'.tr(),
                                   widget.product.deliveryMethod!.name,
                                   isLast: false,
                                 ),
                               if (widget.product.serviceTime.isNotEmpty)
                                 _buildDescriptionRow(
-                                  'Время выполнения',
+                                  'catalog.productDetails.executionTime'.tr(),
                                   widget.product.serviceTime,
                                   isLast: false,
                                 ),
                               _buildDescriptionRow(
-                                'Страна',
+                                'catalog.productDetails.country'.tr(),
                                 widget.product.country,
                                 isLast: false,
                               ),
                               _buildDescriptionRow(
-                                'Город',
+                                'catalog.productDetails.city'.tr(),
                                 widget.product.city,
                                 isLast: true,
                               ),
@@ -402,7 +403,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Отзывы покупателей (0)',
+                                    'catalog.productDetails.reviewsCount'.tr(namedArgs: {'count': '0'}),
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700,
@@ -419,7 +420,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                     vertical: 40,
                                   ),
                                   child: Text(
-                                    'Отзывы отсутствуют',
+                                    'catalog.productDetails.noReviews'.tr(),
                                     style: const TextStyle(
                                       fontSize: 16,
                                       color: Color(0xFF6b7280),
@@ -440,7 +441,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               horizontal: AppSizes.paddingMedium,
                             ),
                             child: Text(
-                              'С этим товаром чаще всего берут',
+                              'catalog.productDetails.oftenBoughtWith'.tr(),
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../models/product.dart';
 import '../services/auth_state_manager.dart';
@@ -126,7 +127,7 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      product.availability ? 'В наличии' : 'Нет в наличии',
+                      product.availability ? 'catalog.productCard.inStock'.tr() : 'catalog.productCard.outOfStock'.tr(),
                       style: TextStyle(
                         fontSize: 11,
                         color: AppColors.iconAndText.withOpacity(0.6),
@@ -181,9 +182,9 @@ class ProductCard extends StatelessWidget {
                       color: AppColors.iconAndText.withOpacity(0.5),
                     ),
                     const SizedBox(width: 4),
-                    const Text(
-                      'Поставщик',
-                      style: TextStyle(
+                    Text(
+                      'catalog.productCard.supplier'.tr(),
+                      style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.iconAndText,
                       ),
@@ -207,9 +208,9 @@ class ProductCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Подробнее',
-                            style: TextStyle(
+                          child: Text(
+                            'catalog.productCard.details'.tr(),
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.iconAndText,
                               fontWeight: FontWeight.w500,
@@ -251,17 +252,17 @@ class ProductCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.shopping_cart_outlined,
                                 size: 16,
                                 color: Colors.white,
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
-                                'Добавить',
+                                'catalog.productCard.add'.tr(),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.white,

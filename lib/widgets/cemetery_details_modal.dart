@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide Icon, TextStyle;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../models/cemetery.dart';
 import '../models/grave.dart';
@@ -96,7 +97,7 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
       setState(() => _isLoadingGraves = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: flutter.Text('Ошибка загрузки могил: $e')),
+          SnackBar(content: flutter.Text('booking.details.loadingGraves'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -203,8 +204,8 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
           flutter.Row(
             mainAxisAlignment: flutter.MainAxisAlignment.spaceBetween,
             children: [
-              const flutter.Text(
-                'Выбранное место',
+              flutter.Text(
+                'booking.details.selectedPlace'.tr(),
                 style: flutter.TextStyle(
                   fontSize: 16,
                   fontWeight: flutter.FontWeight.w600,
@@ -237,7 +238,7 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
             children: [
               flutter.Expanded(
                 child: flutter.Text(
-                  'Сектор: ${grave.sectorNumber}',
+                  'booking.details.sector'.tr(namedArgs: {'sector': grave.sectorNumber}),
                   style: const flutter.TextStyle(
                     fontSize: 14,
                     color: AppColors.iconAndText,
@@ -246,7 +247,7 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
               ),
               flutter.Expanded(
                 child: flutter.Text(
-                  'Место: ${grave.graveNumber}',
+                  'booking.details.place'.tr(namedArgs: {'place': grave.graveNumber}),
                   style: const flutter.TextStyle(
                     fontSize: 14,
                     color: AppColors.iconAndText,
@@ -272,7 +273,7 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
               ),
               const flutter.SizedBox(width: 8),
               flutter.Text(
-                'Статус: ${_getStatusText(grave.status)}',
+                'booking.details.status'.tr(namedArgs: {'status': _getStatusText(grave.status)}),
                 style: const flutter.TextStyle(
                   fontSize: 14,
                   color: AppColors.iconAndText,
@@ -288,11 +289,11 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
   String _getStatusText(String status) {
     switch (status) {
       case 'free':
-        return 'Свободно';
+        return 'booking.details.statusFree'.tr();
       case 'reserved':
-        return 'Зарезервировано';
+        return 'booking.details.statusReserved'.tr();
       case 'occupied':
-        return 'Занято';
+        return 'booking.details.statusOccupied'.tr();
       default:
         return status;
     }
@@ -360,8 +361,8 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
                     const flutter.SizedBox(height: 16),
                     flutter.Text(
                       !_isMapKitInitialized
-                          ? 'Инициализация карты...'
-                          : 'Загрузка мест...',
+                          ? 'booking.details.mapInitializing'.tr()
+                          : 'booking.details.loadingPlaces'.tr(),
                       style: const flutter.TextStyle(
                         fontSize: 14,
                         color: AppColors.iconAndText,
@@ -459,20 +460,20 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
                             _buildLegendItem(
                               color: flutter.Colors.green,
                               label:
-                                  'Свободные места: ${widget.cemetery.freeSpaces}',
+                                  'booking.details.freePlaces'.tr(namedArgs: {'count': widget.cemetery.freeSpaces.toString()}),
                             ),
                             const flutter.SizedBox(width: 16),
                             _buildLegendItem(
                               color: flutter.Colors.orange,
                               label:
-                                  'Зарезервировано: ${widget.cemetery.reservedSpaces}',
+                                  'booking.details.reservedPlaces'.tr(namedArgs: {'count': widget.cemetery.reservedSpaces.toString()}),
                             ),
                           ],
                         ),
                         const flutter.SizedBox(height: 8),
                         _buildLegendItem(
                           color: flutter.Colors.grey,
-                          label: 'Занято: ${widget.cemetery.occupiedSpaces}',
+                          label: 'booking.details.occupiedPlaces'.tr(namedArgs: {'count': widget.cemetery.occupiedSpaces.toString()}),
                         ),
                         const flutter.SizedBox(height: 20),
                         // Адрес
@@ -566,8 +567,8 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
                                 flutter.Text(
                                   _selectedGrave != null &&
                                           _selectedGrave!.isFree
-                                      ? 'Забронировать место'
-                                      : 'Выберите свободное место',
+                                      ? 'booking.details.bookPlace'.tr()
+                                      : 'booking.details.selectFreePlace'.tr(),
                                   style: const flutter.TextStyle(
                                     fontSize: 16,
                                     fontWeight: flutter.FontWeight.w600,

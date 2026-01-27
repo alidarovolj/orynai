@@ -68,7 +68,7 @@ class _CatalogPageState extends State<CatalogPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки категорий: $e')),
+          SnackBar(content: Text('catalog.loadCategoriesError'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -207,8 +207,8 @@ class _CatalogPageState extends State<CatalogPage> {
                                   horizontal: AppSizes.paddingMedium,
                                   vertical: AppSizes.paddingLarge,
                                 ),
-                                child: const Text(
-                                  'Каталог',
+                                child: Text(
+                                  'catalog.title'.tr(),
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w700,

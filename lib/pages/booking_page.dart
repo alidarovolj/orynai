@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../constants.dart';
@@ -225,14 +226,14 @@ class _BookingPageState extends State<BookingPage> {
     } catch (e) {
       debugPrint('Error picking file: $e');
       if (mounted) {
-        String errorMessage = 'Ошибка выбора файла';
+        String errorMessage = 'profile.errors.filePick'.tr();
         
         // Более понятное сообщение для разных типов ошибок
         if (e.toString().contains('channel-error') || 
             e.toString().contains('Unable to establish connection')) {
-          errorMessage = 'Не удалось открыть галерею. Проверьте разрешения приложения.';
+          errorMessage = 'profile.errors.galleryOpen'.tr();
         } else if (e.toString().contains('permission')) {
-          errorMessage = 'Необходимо разрешение на доступ к галерее';
+          errorMessage = 'profile.errors.galleryPermission'.tr();
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
@@ -330,8 +331,8 @@ class _BookingPageState extends State<BookingPage> {
                 size: 24,
               ),
               const SizedBox(width: AppSizes.paddingSmall),
-              const Text(
-                'Загрузить файл',
+              Text(
+                'booking.uploadFile'.tr(),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -381,8 +382,8 @@ class _BookingPageState extends State<BookingPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Заголовок
-                          const Text(
-                            'БРОНИРОВАНИЕ МЕСТА',
+                          Text(
+                            'booking.title'.tr(),
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -440,8 +441,8 @@ class _BookingPageState extends State<BookingPage> {
                                 // Срок брони
                                 Row(
                                   children: [
-                                    const Text(
-                                      'Срок брони: ',
+                                    Text(
+                                      'booking.reservationPeriod'.tr(),
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
@@ -450,7 +451,7 @@ class _BookingPageState extends State<BookingPage> {
                                       ),
                                     ),
                                     Text(
-                                      '3 дня',
+                                      'booking.reservationPeriodValue'.tr(),
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w400,
@@ -470,8 +471,8 @@ class _BookingPageState extends State<BookingPage> {
                                 // Сектор и место
                                 Row(
                                   children: [
-                                    const Text(
-                                      'Сектор: ',
+                                    Text(
+                                      'booking.sector'.tr(),
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
@@ -489,8 +490,8 @@ class _BookingPageState extends State<BookingPage> {
                                       ),
                                     ),
                                     const SizedBox(width: AppSizes.paddingMedium),
-                                    const Text(
-                                      'Место: ',
+                                    Text(
+                                      'booking.place'.tr(),
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
@@ -511,8 +512,8 @@ class _BookingPageState extends State<BookingPage> {
                                 ),
                                 const SizedBox(height: AppSizes.paddingSmall),
                                 // ФИО покойного
-                                const Text(
-                                  'ФИО покойного:',
+                                Text(
+                                  'booking.deceasedFullName'.tr(),
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -534,7 +535,7 @@ class _BookingPageState extends State<BookingPage> {
                                       ),
                                     ),
                                     Text(
-                                      'Не указано',
+                                      'booking.notSpecified'.tr(),
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w400,
@@ -549,8 +550,8 @@ class _BookingPageState extends State<BookingPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Второй заголовок
-                          const Text(
-                            'БРОНИРОВАНИЕ МЕСТА',
+                          Text(
+                            'booking.title'.tr(),
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -560,8 +561,8 @@ class _BookingPageState extends State<BookingPage> {
                           ),
                           const SizedBox(height: AppSizes.paddingLarge),
                           // Инструкция
-                          const Text(
-                            'Укажите данные покойного',
+                          Text(
+                            'booking.enterDeceasedData'.tr(),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -579,7 +580,7 @@ class _BookingPageState extends State<BookingPage> {
                               LengthLimitingTextInputFormatter(12),
                             ],
                             decoration: InputDecoration(
-                              hintText: 'ИИН',
+                              hintText: 'booking.iin'.tr(),
                               hintStyle: TextStyle(
                                 color: AppColors.accordionBorder,
                                 fontFamily: 'Manrope',
@@ -629,7 +630,7 @@ class _BookingPageState extends State<BookingPage> {
                             controller: _fullNameController,
                             enabled: !_isFullNameFromApi,
                             decoration: InputDecoration(
-                              hintText: 'ФИО',
+                              hintText: 'booking.fullName'.tr(),
                               hintStyle: TextStyle(
                                 color: AppColors.accordionBorder,
                                 fontFamily: 'Manrope',
@@ -672,8 +673,8 @@ class _BookingPageState extends State<BookingPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Даты',
+                              Text(
+                                'booking.dates'.tr(),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
@@ -696,8 +697,8 @@ class _BookingPageState extends State<BookingPage> {
                           if (_datesEnabled) ...[
                             const SizedBox(height: AppSizes.paddingLarge),
                             // Дата смерти
-                            const Text(
-                              'Дата смерти',
+                            Text(
+                              'booking.deathDate'.tr(),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -712,7 +713,7 @@ class _BookingPageState extends State<BookingPage> {
                                 controller: _deathDateController,
                                 enabled: false,
                                 decoration: InputDecoration(
-                                  hintText: 'ДД.ММ.ГГГГ',
+                                  hintText: 'booking.deathDateHint'.tr(),
                                   hintStyle: TextStyle(
                                     color: AppColors.accordionBorder,
                                     fontFamily: 'Manrope',
@@ -752,8 +753,8 @@ class _BookingPageState extends State<BookingPage> {
                             ),
                             const SizedBox(height: AppSizes.paddingLarge),
                             // Загрузка файла заключения о смерти
-                            const Text(
-                              'Заключение о смерти от мед учереждении:',
+                            Text(
+                              'booking.deathCertificate'.tr(),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -765,8 +766,8 @@ class _BookingPageState extends State<BookingPage> {
                             _buildFileUploadField(),
                             const SizedBox(height: AppSizes.paddingLarge),
                             // Дата похорон
-                            const Text(
-                              'Дата похорон:',
+                            Text(
+                              'booking.burialDateLabel'.tr(),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -781,7 +782,7 @@ class _BookingPageState extends State<BookingPage> {
                                 controller: _burialDateController,
                                 enabled: false,
                                 decoration: InputDecoration(
-                                  hintText: 'ДД.ММ.ГГГГ',
+                                  hintText: 'booking.deathDateHint'.tr(),
                                   hintStyle: TextStyle(
                                     color: AppColors.accordionBorder,
                                     fontFamily: 'Manrope',
@@ -821,8 +822,8 @@ class _BookingPageState extends State<BookingPage> {
                             ),
                             const SizedBox(height: AppSizes.paddingLarge),
                             // Время похорон
-                            const Text(
-                              'Время похорон',
+                            Text(
+                              'booking.burialTime'.tr(),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -837,7 +838,7 @@ class _BookingPageState extends State<BookingPage> {
                                 controller: _burialTimeController,
                                 enabled: false,
                                 decoration: InputDecoration(
-                                  hintText: '—:—',
+                                  hintText: 'booking.burialTimeHint'.tr(),
                                   hintStyle: TextStyle(
                                     color: AppColors.accordionBorder,
                                     fontFamily: 'Manrope',
@@ -879,7 +880,7 @@ class _BookingPageState extends State<BookingPage> {
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Кнопка "Забронировать место"
                           AppButton(
-                            text: 'Забронировать место',
+                            text: 'booking.bookPlace'.tr(),
                             onPressed: _handleBooking,
                             backgroundColor: AppColors.buttonBackground,
                             icon: const Icon(
@@ -908,14 +909,14 @@ class _BookingPageState extends State<BookingPage> {
 
     if (iin.isEmpty || iin.length != 12) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите корректный ИИН (12 цифр)')),
+        SnackBar(content: Text('booking.errors.invalidIin'.tr())),
       );
       return;
     }
 
     if (fullName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите ФИО покойного')),
+        SnackBar(content: Text('booking.errors.emptyFullName'.tr())),
       );
       return;
     }
@@ -937,7 +938,7 @@ class _BookingPageState extends State<BookingPage> {
     } catch (e) {
       debugPrint('Error creating burial request: $e');
       if (mounted) {
-        String errorMessage = 'Ошибка бронирования';
+        String errorMessage = 'booking.errors.bookingError'.tr();
         
         // Извлекаем понятное сообщение об ошибке
         if (e is ApiException) {
@@ -947,7 +948,7 @@ class _BookingPageState extends State<BookingPage> {
             errorMessage = e.body!['message'].toString();
           }
         } else {
-          errorMessage = 'Ошибка бронирования: ${e.toString()}';
+          errorMessage = 'booking.errors.bookingErrorWithDetails'.tr(namedArgs: {'error': e.toString()});
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
