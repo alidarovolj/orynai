@@ -12,7 +12,11 @@ import '../models/notification.dart' as models;
 import '../widgets/order_payment_button.dart';
 import '../widgets/app_button.dart';
 import 'create_memorial_page.dart';
+import 'create_appeal_page.dart';
+import 'memorial_detail_page.dart';
 import '../models/cemetery.dart';
+import '../models/appeal.dart';
+import '../models/memorial.dart';
 import '../services/cemetery_service.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -41,7 +45,7 @@ class _ProfilePageState extends State<ProfilePage>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 6,
+      length: 7,
       vsync: this,
       initialIndex: widget.initialTab ?? 0,
     );
@@ -90,9 +94,13 @@ class _ProfilePageState extends State<ProfilePage>
     } catch (e) {
       debugPrint('Error loading user data: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('profile.errors.loadData'.tr(namedArgs: {'error': e.toString()}))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'profile.errors.loadData'.tr(namedArgs: {'error': e.toString()}),
+            ),
+          ),
+        );
       }
     }
   }
@@ -164,13 +172,14 @@ class _ProfilePageState extends State<ProfilePage>
                       fontFamily: 'Manrope',
                     ),
                     tabAlignment: TabAlignment.start,
-                    tabs: [
-                      Tab(text: 'profile.tabs.personalData'.tr()),
-                      Tab(text: 'profile.tabs.orders'.tr()),
-                      Tab(text: 'profile.tabs.burialRequests'.tr()),
-                      Tab(text: 'profile.tabs.notifications'.tr()),
-                      Tab(text: 'profile.tabs.akimatAppeals'.tr()),
-                      Tab(text: 'profile.tabs.reburialRequest'.tr()),
+                    tabs: const [
+                      Tab(text: 'Личные данные'),
+                      Tab(text: 'Заказы'),
+                      Tab(text: 'Заявки на захоронение'),
+                      Tab(text: 'Уведомления'),
+                      Tab(text: 'Обращения в акимат'),
+                      Tab(text: 'Цифровые мемориалы'),
+                      Tab(text: 'Запрос на перезахоронение'),
                     ],
                   ),
                 ),
@@ -184,6 +193,7 @@ class _ProfilePageState extends State<ProfilePage>
                       _buildBurialRequestsTab(),
                       _buildNotificationsTab(),
                       _buildAkimatAppealsTab(),
+                      _buildMemorialsTab(),
                       _buildReburialRequestTab(),
                     ],
                   ),
@@ -202,11 +212,20 @@ class _ProfilePageState extends State<ProfilePage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDataRow(label: 'profile.fullName'.tr(), value: _fullName ?? 'profile.emptyValue'.tr()),
+          _buildDataRow(
+            label: 'profile.fullName'.tr(),
+            value: _fullName ?? 'profile.emptyValue'.tr(),
+          ),
           const SizedBox(height: AppSizes.paddingLarge),
-          _buildDataRow(label: 'profile.iin'.tr(), value: _iin ?? 'profile.emptyValue'.tr()),
+          _buildDataRow(
+            label: 'profile.iin'.tr(),
+            value: _iin ?? 'profile.emptyValue'.tr(),
+          ),
           const SizedBox(height: AppSizes.paddingLarge),
-          _buildDataRow(label: 'profile.phone'.tr(), value: _formatPhone(_phone)),
+          _buildDataRow(
+            label: 'profile.phone'.tr(),
+            value: _formatPhone(_phone),
+          ),
         ],
       ),
     );
@@ -226,6 +245,10 @@ class _ProfilePageState extends State<ProfilePage>
 
   Widget _buildAkimatAppealsTab() {
     return AkimatAppealsWidget(apiService: _apiService);
+  }
+
+  Widget _buildMemorialsTab() {
+    return MemorialsListWidget(apiService: _apiService);
   }
 
   Widget _buildReburialRequestTab() {
@@ -275,9 +298,7 @@ class _ProfilePageState extends State<ProfilePage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.accordionBorder.withOpacity(0.3),
-        ),
+        border: Border.all(color: AppColors.accordionBorder.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +307,9 @@ class _ProfilePageState extends State<ProfilePage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'profile.orderNumber'.tr(namedArgs: {'id': order.id.toString()}),
+                'profile.orderNumber'.tr(
+                  namedArgs: {'id': order.id.toString()},
+                ),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -300,16 +323,16 @@ class _ProfilePageState extends State<ProfilePage>
                   color: order.status == 'new'
                       ? const Color(0xFF4CAF50)
                       : order.status == 'pending_payment'
-                          ? Colors.orange
-                          : AppColors.accordionBorder,
+                      ? Colors.orange
+                      : AppColors.accordionBorder,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   order.status == 'new'
                       ? 'profile.orderStatusNew'.tr()
                       : order.status == 'pending_payment'
-                          ? 'profile.orderStatusPendingPayment'.tr()
-                          : order.status,
+                      ? 'profile.orderStatusPendingPayment'.tr()
+                      : order.status,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -332,7 +355,9 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           const SizedBox(height: AppSizes.paddingSmall),
           Text(
-            'profile.amount'.tr(namedArgs: {'amount': order.totalPrice.toString()}),
+            'profile.amount'.tr(
+              namedArgs: {'amount': order.totalPrice.toString()},
+            ),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -397,9 +422,7 @@ class _ProfilePageState extends State<ProfilePage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.accordionBorder.withOpacity(0.3),
-        ),
+        border: Border.all(color: AppColors.accordionBorder.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,20 +447,20 @@ class _ProfilePageState extends State<ProfilePage>
                   color: request.status == 'pending'
                       ? Colors.orange
                       : request.status == 'completed'
-                          ? const Color(0xFF4CAF50)
-                          : request.status == 'cancelled'
-                              ? Colors.red
-                              : AppColors.accordionBorder,
+                      ? const Color(0xFF4CAF50)
+                      : request.status == 'cancelled'
+                      ? Colors.red
+                      : AppColors.accordionBorder,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   request.status == 'pending'
                       ? 'profile.requestStatusPending'.tr()
                       : request.status == 'completed'
-                          ? 'profile.requestStatusCompleted'.tr()
-                          : request.status == 'cancelled'
-                              ? 'profile.requestStatusCancelled'.tr()
-                              : request.status,
+                      ? 'profile.requestStatusCompleted'.tr()
+                      : request.status == 'cancelled'
+                      ? 'profile.requestStatusCancelled'.tr()
+                      : request.status,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -458,10 +481,7 @@ class _ProfilePageState extends State<ProfilePage>
           _buildInfoRow('profile.place'.tr(), request.graveNumber),
           if (request.deceased != null) ...[
             const SizedBox(height: AppSizes.paddingSmall),
-            _buildInfoRow(
-              'profile.deceased'.tr(),
-              request.deceased!.fullName,
-            ),
+            _buildInfoRow('profile.deceased'.tr(), request.deceased!.fullName),
           ],
           const SizedBox(height: AppSizes.paddingSmall),
           _buildInfoRow('profile.createdAt'.tr(), createdAt),
@@ -478,9 +498,8 @@ class _ProfilePageState extends State<ProfilePage>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CreateMemorialPage(
-                      burialRequestId: request.id,
-                    ),
+                    builder: (context) =>
+                        CreateMemorialPage(burialRequestId: request.id),
                   ),
                 );
               },
@@ -560,7 +579,9 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
         requiresAuth: true,
       );
 
-      final ordersData = OrdersResponse.fromJson(response as Map<String, dynamic>);
+      final ordersData = OrdersResponse.fromJson(
+        response as Map<String, dynamic>,
+      );
 
       setState(() {
         _orders = ordersData.items;
@@ -573,7 +594,13 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.errors.loadOrders'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: Text(
+              'profile.errors.loadOrders'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
         );
       }
     }
@@ -627,9 +654,7 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.accordionBorder.withOpacity(0.3),
-        ),
+        border: Border.all(color: AppColors.accordionBorder.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,7 +663,9 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'profile.orderNumber'.tr(namedArgs: {'id': order.id.toString()}),
+                'profile.orderNumber'.tr(
+                  namedArgs: {'id': order.id.toString()},
+                ),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -652,16 +679,16 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
                   color: order.status == 'new'
                       ? const Color(0xFF4CAF50)
                       : order.status == 'pending_payment'
-                          ? Colors.orange
-                          : AppColors.accordionBorder,
+                      ? Colors.orange
+                      : AppColors.accordionBorder,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   order.status == 'new'
                       ? 'profile.orderStatusNew'.tr()
                       : order.status == 'pending_payment'
-                          ? 'profile.orderStatusPendingPayment'.tr()
-                          : order.status,
+                      ? 'profile.orderStatusPendingPayment'.tr()
+                      : order.status,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -684,7 +711,9 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
           ),
           const SizedBox(height: AppSizes.paddingSmall),
           Text(
-            'profile.amount'.tr(namedArgs: {'amount': order.totalPrice.toString()}),
+            'profile.amount'.tr(
+              namedArgs: {'amount': order.totalPrice.toString()},
+            ),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -773,7 +802,13 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.errors.loadRequests'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: Text(
+              'profile.errors.loadRequests'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
         );
       }
     }
@@ -837,9 +872,7 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.accordionBorder.withOpacity(0.3),
-        ),
+        border: Border.all(color: AppColors.accordionBorder.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -864,20 +897,20 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
                   color: request.status == 'pending'
                       ? Colors.orange
                       : request.status == 'completed'
-                          ? const Color(0xFF4CAF50)
-                          : request.status == 'cancelled'
-                              ? Colors.red
-                              : AppColors.accordionBorder,
+                      ? const Color(0xFF4CAF50)
+                      : request.status == 'cancelled'
+                      ? Colors.red
+                      : AppColors.accordionBorder,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   request.status == 'pending'
                       ? 'profile.requestStatusPending'.tr()
                       : request.status == 'completed'
-                          ? 'profile.requestStatusCompleted'.tr()
-                          : request.status == 'cancelled'
-                              ? 'profile.requestStatusCancelled'.tr()
-                              : request.status,
+                      ? 'profile.requestStatusCompleted'.tr()
+                      : request.status == 'cancelled'
+                      ? 'profile.requestStatusCancelled'.tr()
+                      : request.status,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -898,10 +931,7 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
           _buildInfoRow('profile.place'.tr(), request.graveNumber),
           if (request.deceased != null) ...[
             const SizedBox(height: AppSizes.paddingSmall),
-            _buildInfoRow(
-              'profile.deceased'.tr(),
-              request.deceased!.fullName,
-            ),
+            _buildInfoRow('profile.deceased'.tr(), request.deceased!.fullName),
           ],
           const SizedBox(height: AppSizes.paddingSmall),
           _buildInfoRow('profile.createdAt'.tr(), createdAt),
@@ -918,9 +948,8 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CreateMemorialPage(
-                      burialRequestId: request.id,
-                    ),
+                    builder: (context) =>
+                        CreateMemorialPage(burialRequestId: request.id),
                   ),
                 );
               },
@@ -983,7 +1012,11 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
   int _total = 0;
   bool _hasMore = true;
 
-  final List<String> _serviceTypes = ['all', 'supplier-service', 'burial-request-service'];
+  final List<String> _serviceTypes = [
+    'all',
+    'supplier-service',
+    'burial-request-service',
+  ];
 
   @override
   void initState() {
@@ -1000,7 +1033,9 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
     }
 
     try {
-      final serviceName = _selectedServiceType == 'all' ? null : _selectedServiceType;
+      final serviceName = _selectedServiceType == 'all'
+          ? null
+          : _selectedServiceType;
       final response = await widget.apiService.getNotifications(
         limit: _limit,
         offset: loadMore ? _offset : 0,
@@ -1016,7 +1051,8 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
           _notifications = notificationsData.notifications;
         }
         _total = notificationsData.total;
-        _offset = notificationsData.offset + notificationsData.notifications.length;
+        _offset =
+            notificationsData.offset + notificationsData.notifications.length;
         _hasMore = _offset < _total;
         _isLoading = false;
       });
@@ -1027,7 +1063,13 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.errors.loadNotifications'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: Text(
+              'profile.errors.loadNotifications'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
         );
       }
     }
@@ -1055,7 +1097,11 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
       debugPrint('Error marking all as read: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.errors.generic'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: Text(
+              'profile.errors.generic'.tr(namedArgs: {'error': e.toString()}),
+            ),
+          ),
         );
       }
     }
@@ -1089,15 +1135,17 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
 
   String _getNotificationTitle(models.Notification notification) {
     // Формируем заголовок как "Уведомление - {subject} - {номер}"
-    String title = 'profile.notificationTitle'.tr(namedArgs: {'subject': notification.subject});
-    
+    String title = 'profile.notificationTitle'.tr(
+      namedArgs: {'subject': notification.subject},
+    );
+
     // Извлекаем номер из data
     if (notification.data.containsKey('order_id')) {
       title += ' - ${notification.data['order_id']}';
     } else if (notification.data.containsKey('request_number')) {
       title += ' - ${notification.data['request_number']}';
     }
-    
+
     return title;
   }
 
@@ -1261,48 +1309,49 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _notifications.isEmpty
-                  ? Center(
-                      child: Text(
-                        'profile.noNotifications'.tr(),
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.accordionBorder,
-                          fontFamily: 'Manrope',
-                        ),
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () => _loadNotifications(),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.paddingMedium,
-                        ),
-                        itemCount: _notifications.length + (_hasMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _notifications.length) {
-                            // Кнопка "Загрузить еще"
-                            return Padding(
-                              padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                              child: Center(
-                                child: TextButton(
-                                  onPressed: () => _loadNotifications(loadMore: true),
-                                  child: Text(
-                                    'profile.loadMore'.tr(),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: 'Manrope',
-                                    ),
-                                  ),
+              ? Center(
+                  child: Text(
+                    'profile.noNotifications'.tr(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.accordionBorder,
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () => _loadNotifications(),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.paddingMedium,
+                    ),
+                    itemCount: _notifications.length + (_hasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _notifications.length) {
+                        // Кнопка "Загрузить еще"
+                        return Padding(
+                          padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                          child: Center(
+                            child: TextButton(
+                              onPressed: () =>
+                                  _loadNotifications(loadMore: true),
+                              child: Text(
+                                'profile.loadMore'.tr(),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: 'Manrope',
                                 ),
                               ),
-                            );
-                          }
+                            ),
+                          ),
+                        );
+                      }
 
-                          final notification = _notifications[index];
-                          return _buildNotificationCard(notification);
-                        },
-                      ),
-                    ),
+                      final notification = _notifications[index];
+                      return _buildNotificationCard(notification);
+                    },
+                  ),
+                ),
         ),
         // Футер "Все уведомления загружены"
         if (!_isLoading && _notifications.isNotEmpty && !_hasMore)
@@ -1330,9 +1379,7 @@ class _NotificationsListWidgetState extends State<NotificationsListWidget> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.accordionBorder.withOpacity(0.3),
-          ),
+          border: Border.all(color: AppColors.accordionBorder.withOpacity(0.3)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1404,268 +1451,453 @@ class AkimatAppealsWidget extends StatefulWidget {
 }
 
 class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
-  final TextEditingController _contentController = TextEditingController();
-  int? _selectedTypeId;
-  bool _isLoading = false;
-  final int _maxContentLength = 3500;
-
-  final List<Map<String, dynamic>> _appealTypes = [
-    {'id': 1, 'nameKey': 'profile.appealTypes.complaint'},
-    {'id': 2, 'nameKey': 'profile.appealTypes.suggestion'},
-    {'id': 3, 'nameKey': 'profile.appealTypes.infoRequest'},
-  ];
+  List<Appeal> _appeals = [];
+  bool _isLoading = true;
 
   @override
-  void dispose() {
-    _contentController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadAppeals();
   }
 
-  Future<void> _createAppeal() async {
-    if (_selectedTypeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.selectAppealType'.tr())),
-      );
-      return;
-    }
-
-    final content = _contentController.text.trim();
-    if (content.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.enterAppealText'.tr())),
-      );
-      return;
-    }
-
-    if (content.length > _maxContentLength) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.appealTextMaxLength'.tr(namedArgs: {'max': _maxContentLength.toString()}))),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
+  Future<void> _loadAppeals() async {
+    setState(() => _isLoading = true);
     try {
-      final authManager = AuthStateManager();
-      final userPhone = authManager.currentUser?.phone ?? '';
-
-      if (userPhone.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('profile.errors.userPhoneNotAvailable'.tr())),
-          );
-        }
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      await widget.apiService.createAkimatAppeal(
-        userPhone: userPhone,
-        typeId: _selectedTypeId!,
-        content: content,
-        akimatId: 6, // Значение по умолчанию из примера
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('profile.appealCreatedSuccess'.tr()),
-            backgroundColor: const Color(0xFF4CAF50),
-          ),
-        );
-        
-        // Очищаем форму
-        setState(() {
-          _selectedTypeId = null;
-          _contentController.clear();
-        });
-      }
-    } catch (e) {
-      debugPrint('Error creating akimat appeal: $e');
-      if (mounted) {
-        String errorMessage = 'profile.errors.createAppeal'.tr();
-        
-        if (e is ApiException) {
-          errorMessage = e.message;
-          if (e.body != null && e.body!['message'] != null) {
-            errorMessage = e.body!['message'].toString();
-          }
-        } else {
-          errorMessage = 'profile.errors.createAppealWithError'.tr(namedArgs: {'error': e.toString()});
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    } finally {
+      final list = await widget.apiService.getMyAppeals();
       if (mounted) {
         setState(() {
+          _appeals = list;
           _isLoading = false;
         });
       }
+    } catch (e) {
+      debugPrint('Error loading appeals: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка загрузки обращений: $e')),
+        );
+      }
+    }
+  }
+
+  void _openCreateAppeal() async {
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (context) => const CreateAppealPage()),
+    );
+    _loadAppeals();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingSmall,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Expanded(
+                child: Text(
+                  'ОБРАЩЕНИЕ В АКИМАТ',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1d1c1a),
+                    fontFamily: 'Manrope',
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _openCreateAppeal,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.buttonBackground,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.paddingMedium,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Создать обращение',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontFamily: 'Manrope',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _appeals.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Обращений пока нет',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.accordionBorder,
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadAppeals,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(
+                      left: AppSizes.paddingMedium,
+                      right: AppSizes.paddingMedium,
+                      bottom: AppSizes.paddingMedium,
+                    ),
+                    itemCount: _appeals.length,
+                    itemBuilder: (context, index) {
+                      return _buildAppealCard(_appeals[index]);
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAppealCard(Appeal a) {
+    final idStr = a.id.toString().padLeft(5, '0');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Обращение №$idStr',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppColors.accordionBorder,
+            fontFamily: 'Manrope',
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSizes.paddingMedium),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.accordionBorder.withOpacity(0.3),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _row(
+                'Тип обращения:',
+                a.type.nameRu.isNotEmpty ? a.type.nameRu : a.type.value,
+              ),
+              const SizedBox(height: AppSizes.paddingSmall),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Статус',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF1d1c1a),
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.buttonBackground.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppColors.buttonBackground,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          a.status.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1d1c1a),
+                            fontFamily: 'Manrope',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSizes.paddingSmall),
+              _row('Обращение:', a.content.isEmpty ? '—' : a.content),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingMedium),
+      ],
+    );
+  }
+
+  Widget _row(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 120,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class MemorialsListWidget extends StatefulWidget {
+  final ApiService apiService;
+
+  const MemorialsListWidget({super.key, required this.apiService});
+
+  @override
+  State<MemorialsListWidget> createState() => _MemorialsListWidgetState();
+}
+
+class _MemorialsListWidgetState extends State<MemorialsListWidget> {
+  List<Memorial> _memorials = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMemorials();
+  }
+
+  Future<void> _loadMemorials() async {
+    setState(() => _isLoading = true);
+    try {
+      final list = await widget.apiService.getMemorials();
+      if (mounted) {
+        setState(() {
+          _memorials = list;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading memorials: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка загрузки мемориалов: $e')),
+        );
+      }
+    }
+  }
+
+  String _formatDate(String iso) {
+    try {
+      final d = DateTime.parse(iso);
+      return DateFormat('dd.MM.yyyy').format(d);
+    } catch (_) {
+      return iso;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSizes.paddingMedium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Заголовок
-          Text(
-            'profile.createAkimatAppealTitle'.tr(),
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1d1c1a),
-              fontFamily: 'Manrope',
-            ),
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_memorials.isEmpty) {
+      return const Center(
+        child: Text(
+          'Цифровых мемориалов пока нет',
+          style: TextStyle(
+            fontSize: 16,
+            color: AppColors.accordionBorder,
+            fontFamily: 'Manrope',
           ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Поле "Тип обращения"
-          Text(
-            'profile.appealType'.tr(),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1d1c1a),
-              fontFamily: 'Manrope',
-            ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _loadMemorials,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(AppSizes.paddingMedium),
+        itemCount: _memorials.length,
+        itemBuilder: (context, index) => _buildMemorialCard(_memorials[index]),
+      ),
+    );
+  }
+
+  Widget _buildMemorialCard(Memorial m) {
+    final photoUrl = m.photoUrls.isNotEmpty ? m.photoUrls.first : null;
+    final title = m.epitaph?.trim().isNotEmpty == true
+        ? m.epitaph!
+        : 'Мемориал №${m.id}';
+    final about = m.aboutPerson?.trim().isNotEmpty == true
+        ? m.aboutPerson!
+        : null;
+
+    return InkWell(
+      onTap: () async {
+        final updated = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MemorialDetailPage(memorialId: m.id),
           ),
-          const SizedBox(height: AppSizes.paddingSmall),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.accordionBorder.withOpacity(0.3),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: DropdownButton<int>(
-              value: _selectedTypeId,
-              isExpanded: true,
-              underline: const SizedBox(),
-              hint: Text(
-                'profile.selectAppealType'.tr(),
-                style: TextStyle(
-                  color: AppColors.accordionBorder,
-                  fontFamily: 'Manrope',
+        );
+        if (!mounted) return;
+        _loadMemorials();
+        if (updated == true) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Мемориал обновлён')));
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.accordionBorder.withOpacity(0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (photoUrl != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
                 ),
-              ),
-              items: _appealTypes.map((type) {
-                return DropdownMenuItem<int>(
-                  value: type['id'] as int,
-                  child: Text(
-                    (type['nameKey'] as String).tr(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF1d1c1a),
-                      fontFamily: 'Manrope',
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.network(
+                    photoUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: AppColors.accordionBorder.withOpacity(0.2),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 48,
+                        color: AppColors.accordionBorder,
+                      ),
                     ),
                   ),
-                );
-              }).toList(),
-              onChanged: (int? value) {
-                setState(() {
-                  _selectedTypeId = value;
-                });
-              },
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Поле "Обращение"
-          Text(
-            'profile.appeal'.tr(),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1d1c1a),
-              fontFamily: 'Manrope',
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingSmall),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.accordionBorder.withOpacity(0.3),
-              ),
-            ),
-            child: TextField(
-              controller: _contentController,
-              maxLines: 10,
-              maxLength: _maxContentLength,
-              decoration: InputDecoration(
-                hintText: 'profile.enterAppealText'.tr(),
-                hintStyle: TextStyle(
-                  color: AppColors.accordionBorder,
-                  fontFamily: 'Manrope',
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(16),
-                counterStyle: TextStyle(
-                  color: AppColors.accordionBorder,
-                  fontFamily: 'Manrope',
                 ),
               ),
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color(0xFF1d1c1a),
-                fontFamily: 'Manrope',
-              ),
-              onChanged: (value) {
-                setState(() {});
-              },
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Кнопка "Создать обращение"
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _createAppeal,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.buttonBackground,
-                disabledBackgroundColor: AppColors.accordionBorder,
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSizes.paddingMedium,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            Padding(
+              padding: const EdgeInsets.all(AppSizes.paddingMedium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1d1c1a),
+                            fontFamily: 'Manrope',
+                          ),
+                        ),
                       ),
-                    )
-                  : Text(
-                      'profile.createAppeal'.tr(),
+                      if (m.isPublic)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.buttonBackground.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'Публичный',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1d1c1a),
+                              fontFamily: 'Manrope',
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (about != null) ...[
+                    const SizedBox(height: AppSizes.paddingSmall),
+                    Text(
+                      about,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.accordionBorder,
                         fontFamily: 'Manrope',
                       ),
                     ),
+                  ],
+                  const SizedBox(height: AppSizes.paddingSmall),
+                  Text(
+                    'Создан: ${_formatDate(m.createdAt)}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.accordionBorder,
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1684,7 +1916,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
   final CemeteryService _cemeteryService = CemeteryService();
   final TextEditingController _reasonController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
-  
+
   List<Cemetery> _cemeteries = [];
   Cemetery? _oldCemetery;
   Cemetery? _newCemetery;
@@ -1721,7 +1953,13 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.errors.loadCemeteries'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: Text(
+              'profile.errors.loadCemeteries'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
         );
       }
     }
@@ -1752,14 +1990,14 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
       debugPrint('Error picking file: $e');
       if (mounted) {
         String errorMessage = 'profile.errors.filePick'.tr();
-        
-        if (e.toString().contains('channel-error') || 
+
+        if (e.toString().contains('channel-error') ||
             e.toString().contains('Unable to establish connection')) {
           errorMessage = 'profile.errors.galleryOpen'.tr();
         } else if (e.toString().contains('permission')) {
           errorMessage = 'profile.errors.galleryPermission'.tr();
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -1946,7 +2184,9 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
 
     if (_kinshipConfirmationFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.errors.uploadKinshipConfirmation'.tr())),
+        SnackBar(
+          content: Text('profile.errors.uploadKinshipConfirmation'.tr()),
+        ),
       );
       return;
     }
@@ -1965,7 +2205,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
     try {
       // TODO: Реализовать отправку запроса на перезахоронение
       // await widget.apiService.createReburialRequest(...);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1973,7 +2213,7 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
             backgroundColor: const Color(0xFF4CAF50),
           ),
         );
-        
+
         // Очищаем форму
         setState(() {
           _oldCemetery = null;
@@ -1989,7 +2229,11 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('profile.errors.createRequest'.tr(namedArgs: {'error': e.toString()})),
+            content: Text(
+              'profile.errors.createRequest'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -2240,9 +2484,4 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
   }
 }
 
-enum FileType {
-  deathCertificate,
-  kinshipConfirmation,
-  graveDocument,
-}
-
+enum FileType { deathCertificate, kinshipConfirmation, graveDocument }

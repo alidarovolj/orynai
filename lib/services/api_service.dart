@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'auth_state_manager.dart';
+import '../models/appeal.dart';
+import '../models/deceased.dart';
+import '../models/memorial.dart';
 
 class ApiService {
   static ApiService? _instance;
@@ -35,8 +39,18 @@ class ApiService {
     }
   }
 
-  // Получение HTTP клиента
-  http.Client get _client => _httpClient ?? http.Client();
+  // Получение HTTP клиента — в dev ВСЕГДА через Chucker, чтобы все запросы попадали в лог
+  http.Client get _client {
+    if (_httpClient != null) return _httpClient!;
+    final env = dotenv.env['ENV'];
+    if (env == 'dev') {
+      _httpClient = ChuckerHttpClient(http.Client());
+      debugPrint('🔍 [API] Chucker Flutter включен (lazy)');
+    } else {
+      _httpClient = http.Client();
+    }
+    return _httpClient!;
+  }
 
   String get baseUrl => _baseUrl ?? '';
 
@@ -340,8 +354,9 @@ class ApiService {
           return {'success': true, 'data': responseBody};
         }
         final decoded = json.decode(responseBody);
-        // Возвращаем как есть (может быть Map или List)
-        return decoded as Map<String, dynamic>;
+        if (decoded is Map<String, dynamic>) return decoded;
+        // Ответ — число (например ID), строка или список — оборачиваем в Map
+        return {'success': true, 'data': decoded};
       } else {
         final errorBody = response.body.isNotEmpty
             ? json.decode(response.body) as Map<String, dynamic>
@@ -907,7 +922,7 @@ class ApiService {
   Future<void> markAllNotificationsAsRead() async {
     try {
       await post(
-        '/api/v1/notifications/mark-all-read',
+        '/api/v10/my/notifications/read-all',
         body: {},
         requiresAuth: true,
       );
@@ -921,12 +936,30 @@ class ApiService {
   Future<void> markNotificationAsRead(int notificationId) async {
     try {
       await post(
-        '/api/v1/notifications/$notificationId/mark-read',
+        '/api/v10/my/notifications/$notificationId/read',
         body: {},
         requiresAuth: true,
       );
     } catch (e) {
       debugPrint('Error marking notification as read: $e');
+      rethrow;
+    }
+  }
+
+  /// Список обращений пользователя в акимат.
+  /// GET /api/v3/rip-government/v1/appeal/my
+  Future<List<Appeal>> getMyAppeals() async {
+    try {
+      final raw = await get(
+        '/api/v3/rip-government/v1/appeal/my',
+        requiresAuth: true,
+      );
+      final list = raw is List ? raw : (raw as Map)['content'] as List? ?? [];
+      return list
+          .map<Appeal>((e) => Appeal.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error loading my appeals: $e');
       rethrow;
     }
   }
@@ -939,7 +972,7 @@ class ApiService {
     required int akimatId,
   }) async {
     try {
-      final response = await post(
+      final response = await put(
         '/api/v3/rip-government/v1/appeal',
         body: {
           'userPhone': userPhone,
@@ -953,6 +986,236 @@ class ApiService {
       return response;
     } catch (e) {
       debugPrint('Error creating akimat appeal: $e');
+      rethrow;
+    }
+  }
+
+  /// Загрузка файла (фото или достижение) для мемориала.
+  /// [userPhone] — телефон пользователя без +7 (например 77472367503).
+  /// [file] — файл изображения.
+  /// [isAchievement] — true для достижений, false для фото.
+  /// Возвращает URL загруженного файла (S3).
+  Future<String> uploadMemorialFile({
+    required String userPhone,
+    required File file,
+    required bool isAchievement,
+  }) async {
+    try {
+      final fullPath = '$baseUrl/api/v7/products/memorial/$userPhone';
+      final uri = Uri.parse(fullPath);
+
+      final request = http.MultipartRequest('POST', uri);
+
+      final token = await _getAuthToken();
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers['Accept'] = 'application/json, text/plain, */*';
+      request.headers['Origin'] = baseUrl;
+      request.headers['Referer'] = '$baseUrl/';
+
+      request.fields['is_achievement'] = isAchievement.toString();
+
+      final fileName = file.path.split(RegExp(r'[/\\]')).last;
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'files',
+          file.path,
+          filename: fileName,
+        ),
+      );
+
+      debugPrint('📤 [API] POST multipart $fullPath is_achievement=$isAchievement file=$fileName');
+
+      // Отправляем через _client, чтобы запрос попал в Chucker (request.send() использует свой клиент)
+      final streamedResponse = await _client.send(request);
+      final response = await http.Response.fromStream(streamedResponse);
+
+      debugPrint('📥 [API] Upload response status: ${response.statusCode}');
+      debugPrint('   Body: ${response.body}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final errorBody = response.body.isNotEmpty
+            ? json.decode(response.body) as Map<String, dynamic>
+            : <String, dynamic>{};
+        throw ApiException(
+          statusCode: response.statusCode,
+          message: errorBody['message']?.toString() ??
+              errorBody['description']?.toString() ??
+              errorBody['error']?.toString() ??
+              'Upload failed',
+          body: errorBody,
+        );
+      }
+
+      final decoded = response.body.isNotEmpty ? json.decode(response.body) : null;
+      String? url = _extractUploadUrl(decoded);
+      if (url == null || url.isEmpty) {
+        url = _extractUrlFromRawBody(response.body);
+      }
+      if (url == null || url.isEmpty) {
+        debugPrint('📥 [API] Upload response body (for debugging): ${response.body}');
+        throw ApiException(
+          statusCode: response.statusCode,
+          message: 'Upload response did not contain URL',
+          body: decoded is Map ? decoded as Map<String, dynamic> : <String, dynamic>{},
+        );
+      }
+      return url;
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      debugPrint('Error uploading memorial file: $e');
+      throw ApiException(statusCode: 0, message: 'Upload error: $e');
+    }
+  }
+
+  /// Ищет первую https-ссылку в сыром теле ответа (fallback, чтобы не падать на любом формате).
+  static String? _extractUrlFromRawBody(String body) {
+    if (body.isEmpty) return null;
+    final match = RegExp(r'https://[^\s"<>]+').firstMatch(body);
+    return match?.group(0);
+  }
+
+  /// Извлекает URL из ответа загрузки (разные форматы API).
+  static String? _extractUploadUrl(dynamic decoded) {
+    if (decoded == null) return null;
+    if (decoded is String && decoded.startsWith('http')) return decoded;
+    if (decoded is Map) {
+      final m = decoded;
+      final url = m['url'] ?? m['photo_url'] ?? m['file_url'] ?? m['path'];
+      if (url is String && url.isNotEmpty) return url;
+      final data = m['data'];
+      if (data is String && data.startsWith('http')) return data;
+      if (data is Map) {
+        final u = data['url'] ?? data['photo_url'] ?? data['file_url'] ?? data['path'];
+        if (u is String && u.isNotEmpty) return u;
+      }
+      final list = m['photo_urls'] ?? m['urls'] ?? m['files'];
+      if (list is List && list.isNotEmpty) {
+        final first = list.first;
+        if (first is String && first.startsWith('http')) return first;
+        final u = first is Map ? (first['url'] ?? first['path']) : null;
+        if (u != null && u.toString().startsWith('http')) return u.toString();
+      }
+    }
+    if (decoded is List && decoded.isNotEmpty) {
+      final first = decoded.first;
+      if (first is String && first.startsWith('http')) return first;
+      final u = first is Map ? (first['url'] ?? first['path']) : null;
+      if (u != null && u.toString().startsWith('http')) return u.toString();
+    }
+    return null;
+  }
+
+  /// Один мемориал по id. GET /api/v1/memorials/{id}
+  Future<Memorial> getMemorial(int id) async {
+    try {
+      final raw = await get(
+        '/api/v1/memorials/$id',
+        requiresAuth: true,
+      );
+      final map = raw is Map<String, dynamic> ? raw : null;
+      if (map == null) throw ApiException(statusCode: 0, message: 'Invalid memorial response');
+      return Memorial.fromJson(map);
+    } catch (e) {
+      debugPrint('Error loading memorial $id: $e');
+      rethrow;
+    }
+  }
+
+  /// Данные умершего. GET /api/v9/deceased/{id}
+  Future<Deceased> getDeceased(int id) async {
+    try {
+      final raw = await get(
+        '/api/v9/deceased/$id',
+        requiresAuth: true,
+      );
+      final map = raw is Map<String, dynamic> ? raw : null;
+      if (map == null) throw ApiException(statusCode: 0, message: 'Invalid deceased response');
+      final data = map['data'];
+      if (data is! Map<String, dynamic>) throw ApiException(statusCode: 0, message: 'Deceased data missing');
+      return Deceased.fromJson(data);
+    } catch (e) {
+      debugPrint('Error loading deceased $id: $e');
+      rethrow;
+    }
+  }
+
+  /// Список цифровых мемориалов пользователя.
+  /// GET /api/v1/memorials
+  Future<List<Memorial>> getMemorials() async {
+    try {
+      final raw = await get(
+        '/api/v1/memorials',
+        requiresAuth: true,
+      );
+      final list = raw is List ? raw : (raw as Map)['content'] as List? ?? [];
+      return list
+          .map<Memorial>((e) => Memorial.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error loading memorials: $e');
+      rethrow;
+    }
+  }
+
+  /// Создание мемориала.
+  Future<Map<String, dynamic>> createMemorial({
+    required int deceasedId,
+    required String epitaph,
+    required String aboutPerson,
+    required bool isPublic,
+    required List<String> photoUrls,
+    required List<String> achievementUrls,
+    required List<String> videoUrls,
+  }) async {
+    try {
+      final response = await post(
+        '/api/v1/memorials',
+        body: {
+          'deceased_id': deceasedId,
+          'epitaph': epitaph,
+          'about_person': aboutPerson,
+          'is_public': isPublic,
+          'photo_urls': photoUrls,
+          'achievement_urls': achievementUrls,
+          'video_urls': videoUrls,
+        },
+        requiresAuth: true,
+      );
+      return response is Map<String, dynamic> ? response : {};
+    } catch (e) {
+      debugPrint('Error creating memorial: $e');
+      rethrow;
+    }
+  }
+
+  /// Обновление мемориала. PUT /api/v1/memorials/{id}
+  Future<void> updateMemorial(
+    int id, {
+    required String epitaph,
+    required String aboutPerson,
+    required bool isPublic,
+    required List<String> photoUrls,
+    required List<String> achievementUrls,
+    required List<String> videoUrls,
+  }) async {
+    try {
+      await put(
+        '/api/v1/memorials/$id',
+        body: {
+          'id': id,
+          'epitaph': epitaph,
+          'about_person': aboutPerson,
+          'is_public': isPublic,
+          'photo_urls': photoUrls,
+          'achievement_urls': achievementUrls,
+          'video_urls': videoUrls,
+        },
+        requiresAuth: true,
+      );
+    } catch (e) {
+      debugPrint('Error updating memorial $id: $e');
       rethrow;
     }
   }

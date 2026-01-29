@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:io';
 import '../constants.dart';
 import '../services/api_service.dart';
+import '../services/auth_state_manager.dart';
 import '../widgets/header.dart';
 import '../models/burial_request.dart';
 import '../widgets/app_button.dart';
@@ -925,21 +926,92 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
   }
 
   Future<void> _createMemorial() async {
-    // TODO: Реализовать отправку данных на сервер
-    debugPrint('Creating memorial...');
-    debugPrint('Epitaph: ${_epitaphController.text}');
-    debugPrint('Memory: ${_memoryController.text}');
-    debugPrint('Is Public: $_isPublic');
-    debugPrint('Photos: ${_photos.length}');
-    debugPrint('Achievements: ${_achievements.length}');
-    debugPrint('Video Links: $_videoLinks');
+    if (_burialRequest == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Заявка не найдена')),
+        );
+      }
+      return;
+    }
 
-    // После успешного создания показать модалку и перейти в профиль
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Мемориал создан успешно')),
+    final authManager = AuthStateManager();
+    final user = authManager.currentUser;
+    if (user == null || user.phone.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Войдите в аккаунт')),
+        );
+      }
+      return;
+    }
+
+    // Телефон без +7 для API (77472367503)
+    final userPhone = user.phone.replaceFirst(RegExp(r'^\+?7'), '').replaceAll(RegExp(r'\D'), '');
+
+    try {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      final photoUrls = <String>[];
+      for (final file in _photos) {
+        final url = await _apiService.uploadMemorialFile(
+          userPhone: userPhone,
+          file: file,
+          isAchievement: false,
+        );
+        photoUrls.add(url);
+      }
+
+      final achievementUrls = <String>[];
+      for (final file in _achievements) {
+        final url = await _apiService.uploadMemorialFile(
+          userPhone: userPhone,
+          file: file,
+          isAchievement: true,
+        );
+        achievementUrls.add(url);
+      }
+
+      await _apiService.createMemorial(
+        deceasedId: _burialRequest!.deceasedId,
+        epitaph: _epitaphController.text.trim(),
+        aboutPerson: _memoryController.text.trim(),
+        isPublic: _isPublic,
+        photoUrls: photoUrls,
+        achievementUrls: achievementUrls,
+        videoUrls: List.from(_videoLinks),
       );
-      Navigator.pop(context);
+
+      if (mounted) {
+        Navigator.of(context).pop(); // закрыть диалог загрузки
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Мемориал создан успешно')),
+        );
+        Navigator.of(context).pop(); // вернуться со страницы создания
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // закрыть диалог загрузки
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка: ${e.message}')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error creating memorial: $e');
+      if (mounted) {
+        Navigator.of(context).pop(); // закрыть диалог загрузки при любой ошибке
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка: $e')),
+        );
+      }
     }
   }
 }
