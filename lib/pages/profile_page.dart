@@ -13,13 +13,11 @@ import '../widgets/order_payment_button.dart';
 import '../widgets/app_button.dart';
 import 'create_memorial_page.dart';
 import 'create_appeal_page.dart';
+import 'create_reburial_request_page.dart';
 import 'memorial_detail_page.dart';
-import '../models/cemetery.dart';
 import '../models/appeal.dart';
+import '../models/reburial_request_item.dart';
 import '../models/memorial.dart';
-import '../services/cemetery_service.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   final int? initialTab;
@@ -172,14 +170,14 @@ class _ProfilePageState extends State<ProfilePage>
                       fontFamily: 'Manrope',
                     ),
                     tabAlignment: TabAlignment.start,
-                    tabs: const [
-                      Tab(text: 'Личные данные'),
-                      Tab(text: 'Заказы'),
-                      Tab(text: 'Заявки на захоронение'),
-                      Tab(text: 'Уведомления'),
-                      Tab(text: 'Обращения в акимат'),
-                      Tab(text: 'Цифровые мемориалы'),
-                      Tab(text: 'Запрос на перезахоронение'),
+                    tabs: [
+                      Tab(text: 'profile.tabs.personalData'.tr()),
+                      Tab(text: 'profile.tabs.orders'.tr()),
+                      Tab(text: 'profile.tabs.burialRequests'.tr()),
+                      Tab(text: 'profile.tabs.notifications'.tr()),
+                      Tab(text: 'profile.tabs.akimatAppeals'.tr()),
+                      Tab(text: 'profile.tabs.memorials'.tr()),
+                      Tab(text: 'profile.tabs.reburialRequest'.tr()),
                     ],
                   ),
                 ),
@@ -252,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildReburialRequestTab() {
-    return ReburialRequestWidget(apiService: _apiService);
+    return ReburialRequestsListWidget(apiService: _apiService);
   }
 
   Widget _buildDataRow({required String label, required String value}) {
@@ -1475,7 +1473,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки обращений: $e')),
+          SnackBar(content: Text('profile.errors.loadAppeals'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -1504,10 +1502,10 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'ОБРАЩЕНИЕ В АКИМАТ',
-                  style: TextStyle(
+                  'profile.akimatAppealsTitle'.tr(),
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1d1c1a),
@@ -1527,9 +1525,9 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Создать обращение',
-                  style: TextStyle(
+                child: Text(
+                  'profile.createAppeal'.tr(),
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -1544,10 +1542,10 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _appeals.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'Обращений пока нет',
-                    style: TextStyle(
+                    'profile.noAppeals'.tr(),
+                    style: const TextStyle(
                       fontSize: 16,
                       color: AppColors.accordionBorder,
                       fontFamily: 'Manrope',
@@ -1579,7 +1577,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Обращение №$idStr',
+          'profile.appealNumber'.tr(namedArgs: {'id': idStr}),
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,
@@ -1602,16 +1600,16 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _row(
-                'Тип обращения:',
+                'profile.appealTypeLabel'.tr(),
                 a.type.nameRu.isNotEmpty ? a.type.nameRu : a.type.value,
               ),
               const SizedBox(height: AppSizes.paddingSmall),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Статус',
-                    style: TextStyle(
+                  Text(
+                    'profile.status'.tr(),
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF1d1c1a),
@@ -1655,7 +1653,7 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
                 ],
               ),
               const SizedBox(height: AppSizes.paddingSmall),
-              _row('Обращение:', a.content.isEmpty ? '—' : a.content),
+              _row('profile.appealContentLabel'.tr(), a.content.isEmpty ? 'profile.emptyValue'.tr() : a.content),
             ],
           ),
         ),
@@ -1730,7 +1728,7 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки мемориалов: $e')),
+          SnackBar(content: Text('profile.errors.loadMemorials'.tr(namedArgs: {'error': e.toString()}))),
         );
       }
     }
@@ -1751,10 +1749,10 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_memorials.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'Цифровых мемориалов пока нет',
-          style: TextStyle(
+          'profile.noMemorials'.tr(),
+          style: const TextStyle(
             fontSize: 16,
             color: AppColors.accordionBorder,
             fontFamily: 'Manrope',
@@ -1776,7 +1774,7 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
     final photoUrl = m.photoUrls.isNotEmpty ? m.photoUrls.first : null;
     final title = m.epitaph?.trim().isNotEmpty == true
         ? m.epitaph!
-        : 'Мемориал №${m.id}';
+        : 'profile.memorialNumber'.tr(namedArgs: {'id': m.id.toString()});
     final about = m.aboutPerson?.trim().isNotEmpty == true
         ? m.aboutPerson!
         : null;
@@ -1794,7 +1792,7 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
         if (updated == true) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('Мемориал обновлён')));
+          ).showSnackBar(SnackBar(content: Text('profile.memorialUpdated'.tr())));
         }
       },
       borderRadius: BorderRadius.circular(12),
@@ -1857,9 +1855,9 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
                             color: AppColors.buttonBackground.withOpacity(0.25),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            'Публичный',
-                            style: TextStyle(
+                          child: Text(
+                            'profile.public'.tr(),
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: Color(0xFF1d1c1a),
@@ -1885,7 +1883,7 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
                   ],
                   const SizedBox(height: AppSizes.paddingSmall),
                   Text(
-                    'Создан: ${_formatDate(m.createdAt)}',
+                    'profile.createdDate'.tr(namedArgs: {'date': _formatDate(m.createdAt)}),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -1903,59 +1901,45 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
   }
 }
 
-class ReburialRequestWidget extends StatefulWidget {
+/// Виджет списка заявок на перезахоронение (вкладка в профиле).
+class ReburialRequestsListWidget extends StatefulWidget {
   final ApiService apiService;
 
-  const ReburialRequestWidget({super.key, required this.apiService});
+  const ReburialRequestsListWidget({super.key, required this.apiService});
 
   @override
-  State<ReburialRequestWidget> createState() => _ReburialRequestWidgetState();
+  State<ReburialRequestsListWidget> createState() =>
+      _ReburialRequestsListWidgetState();
 }
 
-class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
-  final CemeteryService _cemeteryService = CemeteryService();
-  final TextEditingController _reasonController = TextEditingController();
-  final ImagePicker _imagePicker = ImagePicker();
-
-  List<Cemetery> _cemeteries = [];
-  Cemetery? _oldCemetery;
-  Cemetery? _newCemetery;
-  File? _deathCertificateFile;
-  File? _kinshipConfirmationFile;
-  File? _graveDocumentFile;
-  bool _isLoadingCemeteries = true;
-  bool _isSubmitting = false;
-  final int _maxReasonLength = 500;
+class _ReburialRequestsListWidgetState extends State<ReburialRequestsListWidget> {
+  List<ReburialRequestItem> _requests = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCemeteries();
+    _loadRequests();
   }
 
-  @override
-  void dispose() {
-    _reasonController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCemeteries() async {
+  Future<void> _loadRequests() async {
+    setState(() => _isLoading = true);
     try {
-      final cemeteries = await _cemeteryService.getCemeteries();
-      setState(() {
-        _cemeteries = cemeteries;
-        _isLoadingCemeteries = false;
-      });
-    } catch (e) {
-      debugPrint('Error loading cemeteries: $e');
-      setState(() {
-        _isLoadingCemeteries = false;
-      });
+      final list = await widget.apiService.getMyReburialRequests();
       if (mounted) {
+        setState(() {
+          _requests = list;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading reburial requests: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'profile.errors.loadCemeteries'.tr(
+              'profile.errors.loadReburialRequests'.tr(
                 namedArgs: {'error': e.toString()},
               ),
             ),
@@ -1965,523 +1949,219 @@ class _ReburialRequestWidgetState extends State<ReburialRequestWidget> {
     }
   }
 
-  Future<void> _pickFile(FileType type) async {
-    try {
-      final XFile? file = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-      );
-
-      if (file != null) {
-        setState(() {
-          switch (type) {
-            case FileType.deathCertificate:
-              _deathCertificateFile = File(file.path);
-              break;
-            case FileType.kinshipConfirmation:
-              _kinshipConfirmationFile = File(file.path);
-              break;
-            case FileType.graveDocument:
-              _graveDocumentFile = File(file.path);
-              break;
-          }
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking file: $e');
-      if (mounted) {
-        String errorMessage = 'profile.errors.filePick'.tr();
-
-        if (e.toString().contains('channel-error') ||
-            e.toString().contains('Unable to establish connection')) {
-          errorMessage = 'profile.errors.galleryOpen'.tr();
-        } else if (e.toString().contains('permission')) {
-          errorMessage = 'profile.errors.galleryPermission'.tr();
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
+  Future<void> _openCreatePage() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreateReburialRequestPage(),
+      ),
+    );
+    if (result == true) _loadRequests();
   }
 
-  void _removeFile(FileType type) {
-    setState(() {
-      switch (type) {
-        case FileType.deathCertificate:
-          _deathCertificateFile = null;
-          break;
-        case FileType.kinshipConfirmation:
-          _kinshipConfirmationFile = null;
-          break;
-        case FileType.graveDocument:
-          _graveDocumentFile = null;
-          break;
-      }
-    });
-  }
-
-  Widget _buildFileUploadSection({
-    required String title,
-    required File? file,
-    required VoidCallback onPickFile,
-    required VoidCallback onRemoveFile,
-  }) {
-    return Column(
+  Widget _row(String label, String value) {
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF1d1c1a),
-            fontFamily: 'Manrope',
+        SizedBox(
+          width: 120,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
           ),
         ),
-        const SizedBox(height: AppSizes.paddingSmall),
-        if (file != null)
-          Container(
-            padding: const EdgeInsets.all(AppSizes.paddingMedium),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.accordionBorder.withOpacity(0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.insert_drive_file,
-                  color: AppColors.iconAndText,
-                  size: 24,
-                ),
-                const SizedBox(width: AppSizes.paddingSmall),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        file.path.split('/').last,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF1d1c1a),
-                          fontFamily: 'Manrope',
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${(file.lengthSync() / 1024).toStringAsFixed(1)} KB',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.accordionBorder,
-                          fontFamily: 'Manrope',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  color: AppColors.iconAndText,
-                  onPressed: onRemoveFile,
-                ),
-              ],
-            ),
-          )
-        else
-          GestureDetector(
-            onTap: onPickFile,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppSizes.paddingXLarge),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.accordionBorder.withOpacity(0.3),
-                  style: BorderStyle.solid,
-                  width: 2,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.upload_file,
-                    size: 48,
-                    color: AppColors.accordionBorder,
-                  ),
-                  const SizedBox(height: AppSizes.paddingMedium),
-                  Text(
-                    'profile.uploadFiles'.tr(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1d1c1a),
-                      fontFamily: 'Manrope',
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.paddingSmall),
-                  Text(
-                    'profile.uploadFilesHint'.tr(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.accordionBorder,
-                      fontFamily: 'Manrope',
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.paddingMedium),
-                  AppButton(
-                    text: 'profile.upload'.tr(),
-                    onPressed: onPickFile,
-                    isOutlined: true,
-                  ),
-                ],
-              ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
             ),
           ),
+        ),
       ],
     );
   }
 
-  Future<void> _submitRequest() async {
-    if (_oldCemetery == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.errors.selectOldBurialPlace'.tr())),
-      );
-      return;
-    }
-
-    if (_newCemetery == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.errors.selectNewBurialPlace'.tr())),
-      );
-      return;
-    }
-
-    final reason = _reasonController.text.trim();
-    if (reason.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.errors.enterReburialReason'.tr())),
-      );
-      return;
-    }
-
-    if (_deathCertificateFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.errors.uploadDeathCertificate'.tr())),
-      );
-      return;
-    }
-
-    if (_kinshipConfirmationFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.errors.uploadKinshipConfirmation'.tr()),
+  Widget _buildRequestCard(ReburialRequestItem r) {
+    final idStr = r.id.toString().padLeft(5, '0');
+    final statusName = r.status.nameRu.isNotEmpty ? r.status.nameRu : r.status.value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'profile.reburialRequestNumber'.tr(namedArgs: {'id': idStr}),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppColors.accordionBorder,
+            fontFamily: 'Manrope',
+          ),
         ),
-      );
-      return;
-    }
-
-    if (_graveDocumentFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.errors.uploadGraveDocument'.tr())),
-      );
-      return;
-    }
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
-    try {
-      // TODO: Реализовать отправку запроса на перезахоронение
-      // await widget.apiService.createReburialRequest(...);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('profile.reburialRequestCreatedSuccess'.tr()),
-            backgroundColor: const Color(0xFF4CAF50),
-          ),
-        );
-
-        // Очищаем форму
-        setState(() {
-          _oldCemetery = null;
-          _newCemetery = null;
-          _reasonController.clear();
-          _deathCertificateFile = null;
-          _kinshipConfirmationFile = null;
-          _graveDocumentFile = null;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error creating reburial request: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'profile.errors.createRequest'.tr(
-                namedArgs: {'error': e.toString()},
-              ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSizes.paddingMedium),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.accordionBorder.withOpacity(0.3),
             ),
-            duration: const Duration(seconds: 5),
           ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
-    }
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'profile.status'.tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF1d1c1a),
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.buttonBackground.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppColors.buttonBackground,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          statusName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1d1c1a),
+                            fontFamily: 'Manrope',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSizes.paddingSmall),
+              _row('profile.reason'.tr(), r.reason.isEmpty ? 'profile.emptyValue'.tr() : r.reason),
+              if (r.user != null && r.user!.fio.isNotEmpty) ...[
+                const SizedBox(height: AppSizes.paddingSmall),
+                _row('profile.applicant'.tr(), r.user!.fio),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingMedium),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSizes.paddingMedium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Заголовок
-          Text(
-            'profile.createReburialTitle'.tr(),
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1d1c1a),
-              fontFamily: 'Manrope',
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingSmall,
           ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Старое место захоронения
-          Text(
-            'profile.oldBurialPlace'.tr(),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1d1c1a),
-              fontFamily: 'Manrope',
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingSmall),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.accordionBorder.withOpacity(0.3),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: DropdownButton<Cemetery>(
-              value: _oldCemetery,
-              isExpanded: true,
-              underline: const SizedBox(),
-              hint: Text(
-                'profile.selectCemetery'.tr(),
-                style: TextStyle(
-                  color: AppColors.accordionBorder,
-                  fontFamily: 'Manrope',
-                ),
-              ),
-              items: _cemeteries.map((cemetery) {
-                return DropdownMenuItem<Cemetery>(
-                  value: cemetery,
-                  child: Text(
-                    cemetery.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF1d1c1a),
-                      fontFamily: 'Manrope',
-                    ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  'profile.reburialRequestsTitle'.tr(),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1d1c1a),
+                    fontFamily: 'Manrope',
                   ),
-                );
-              }).toList(),
-              onChanged: _isLoadingCemeteries
-                  ? null
-                  : (Cemetery? value) {
-                      setState(() {
-                        _oldCemetery = value;
-                      });
-                    },
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Новое место захоронения
-          Text(
-            'profile.newBurialPlace'.tr(),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1d1c1a),
-              fontFamily: 'Manrope',
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingSmall),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.accordionBorder.withOpacity(0.3),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: DropdownButton<Cemetery>(
-              value: _newCemetery,
-              isExpanded: true,
-              underline: const SizedBox(),
-              hint: Text(
-                'profile.selectCemetery'.tr(),
-                style: TextStyle(
-                  color: AppColors.accordionBorder,
-                  fontFamily: 'Manrope',
                 ),
               ),
-              items: _cemeteries.map((cemetery) {
-                return DropdownMenuItem<Cemetery>(
-                  value: cemetery,
-                  child: Text(
-                    cemetery.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF1d1c1a),
-                      fontFamily: 'Manrope',
-                    ),
+              ElevatedButton(
+                onPressed: _openCreatePage,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.buttonBackground,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.paddingMedium,
+                    vertical: 12,
                   ),
-                );
-              }).toList(),
-              onChanged: _isLoadingCemeteries
-                  ? null
-                  : (Cemetery? value) {
-                      setState(() {
-                        _newCemetery = value;
-                      });
-                    },
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Причина
-          Text(
-            'profile.reason'.tr(),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1d1c1a),
-              fontFamily: 'Manrope',
-            ),
-          ),
-          const SizedBox(height: AppSizes.paddingSmall),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.accordionBorder.withOpacity(0.3),
-              ),
-            ),
-            child: TextField(
-              controller: _reasonController,
-              maxLines: 5,
-              maxLength: _maxReasonLength,
-              decoration: InputDecoration(
-                hintText: 'profile.reasonHint'.tr(),
-                hintStyle: TextStyle(
-                  color: AppColors.accordionBorder,
-                  fontFamily: 'Manrope',
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(16),
-                counterStyle: TextStyle(
-                  color: AppColors.accordionBorder,
-                  fontFamily: 'Manrope',
+                child: Text(
+                  'profile.createReburialRequest'.tr(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontFamily: 'Manrope',
+                  ),
                 ),
               ),
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color(0xFF1d1c1a),
-                fontFamily: 'Manrope',
-              ),
-            ),
+            ],
           ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Свидетельство о смерти
-          _buildFileUploadSection(
-            title: 'profile.deathCertificate'.tr(),
-            file: _deathCertificateFile,
-            onPickFile: () => _pickFile(FileType.deathCertificate),
-            onRemoveFile: () => _removeFile(FileType.deathCertificate),
-          ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Подтверждение родства заявителя
-          _buildFileUploadSection(
-            title: 'profile.kinshipConfirmation'.tr(),
-            file: _kinshipConfirmationFile,
-            onPickFile: () => _pickFile(FileType.kinshipConfirmation),
-            onRemoveFile: () => _removeFile(FileType.kinshipConfirmation),
-          ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Документ на могилу
-          _buildFileUploadSection(
-            title: 'profile.graveDocument'.tr(),
-            file: _graveDocumentFile,
-            onPickFile: () => _pickFile(FileType.graveDocument),
-            onRemoveFile: () => _removeFile(FileType.graveDocument),
-          ),
-          const SizedBox(height: AppSizes.paddingXLarge),
-          // Кнопка "Создать запрос в акимат"
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submitRequest,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isSubmitting
-                    ? AppColors.accordionBorder
-                    : AppColors.buttonBackground,
-                disabledBackgroundColor: AppColors.accordionBorder,
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSizes.paddingMedium,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _requests.isEmpty
+                  ? Center(
+                      child: Text(
+                        'profile.noReburialRequests'.tr(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: AppColors.accordionBorder,
+                          fontFamily: 'Manrope',
+                        ),
                       ),
                     )
-                  : Text(
-                      'profile.createReburialRequest'.tr(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        fontFamily: 'Manrope',
+                  : RefreshIndicator(
+                      onRefresh: _loadRequests,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(
+                          left: AppSizes.paddingMedium,
+                          right: AppSizes.paddingMedium,
+                          bottom: AppSizes.paddingMedium,
+                        ),
+                        itemCount: _requests.length,
+                        itemBuilder: (context, index) {
+                          return _buildRequestCard(_requests[index]);
+                        },
                       ),
                     ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
-
-enum FileType { deathCertificate, kinshipConfirmation, graveDocument }

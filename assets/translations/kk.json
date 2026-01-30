@@ -101,6 +101,11 @@
     "phone": "+7 (775) 810-01-10",
     "email": "info@orynai.kz"
   },
+  "supportBlock": {
+    "title": "Көмек және қолдау",
+    "call247": "24/7 қоңырау шалыңыз",
+    "writeWhatsApp": "WhatsApp-та жазыңыз"
+  },
   "menu": {
     "forClients": "КЛИЕНТТЕРГЕ",
     "loginRegister": "Кіру/Тіркелу",
@@ -110,7 +115,8 @@
     "catalog": "Каталог",
     "bookPlace": "Орнын брондау",
     "cart": "Себет",
-    "profile": "Профиль"
+    "profile": "Профиль",
+    "logout": "Шығу"
   },
   "footer": {
     "aboutUs": "Біз туралы",
@@ -123,6 +129,38 @@
   },
   "header": {
     "searchPlaceholder": "Іздеу"
+  },
+  "login": {
+    "titlePhone": "Жеке кабинетке кіру",
+    "titleCode": "Нөмірді растаңыз",
+    "titleRegistration": "Тіркелу",
+    "enterPhoneLabel": "Ұялы телефон нөмірін енгізіңіз:",
+    "enterPhoneHint": "Нөмірді енгізіңіз",
+    "getCodeWhatsApp": "WhatsApp арқылы код алу",
+    "codeSentTo": "WhatsApp-тан келген кодты енгізіңіз. Біз оны нөмірге жібердік",
+    "resendCodeIn": "Кодты қайта жіберу: {seconds} секундтан кейін",
+    "resendCode": "Кодты қайта жіберу",
+    "confirm": "Растау",
+    "enterIinHint": "ЖСН енгізіңіз",
+    "enterSurnameHint": "Тегін енгізіңіз",
+    "enterNameHint": "Атыңызды енгізіңіз",
+    "enterPatronymicHint": "Әкесінің атын енгізіңіз",
+    "agreeTerms": "Пайдалану ережелері мен құпиялылық саясатымен келісемін",
+    "register": "Тіркелу",
+    "errors": {
+      "invalidPhone": "Дұрыс телефон нөмірін енгізіңіз (7-ден басталады)",
+      "errorGeneric": "Қате: {message}",
+      "errorSendCode": "Код жіберу қатесі: {error}",
+      "enterFourDigitCode": "4 таңбалы кодты енгізіңіз",
+      "invalidCode": "Қате код",
+      "errorVerify": "Растау қатесі: {error}",
+      "iinMustBe12": "ЖСН 12 саннан тұруы керек",
+      "errorIinRequest": "ЖСН сұрау қатесі: {error}",
+      "agreeToTerms": "Пайдалану ережелеріне келісім қажет",
+      "fillAllFields": "Барлық өрістерді толтырыңыз",
+      "registrationError": "Тіркелу қатесі",
+      "registrationErrorDetail": "Тіркелу қатесі: {error}"
+    }
   },
   "errors": {
     "whatsappNotAvailable": "WhatsApp ашу мүмкін емес",
@@ -186,6 +224,17 @@
     "appealTextMaxLength": "Жүгіну мәтіні {max} таңбадан аспауы керек",
     "createAppeal": "Жүгіну жасау",
     "appealCreatedSuccess": "Жүгіну сәтті жасалды",
+    "akimatAppealsTitle": "ӘКІМШІЛІККЕ ЖҮГІНУ",
+    "noAppeals": "Жүгінулер әлі жоқ",
+    "appealNumber": "Жүгіну №{id}",
+    "appealTypeLabel": "Жүгіну түрі:",
+    "status": "Мәртебе",
+    "appealContentLabel": "Жүгіну:",
+    "noMemorials": "Сандық мемориалдар әлі жоқ",
+    "memorialNumber": "Мемориал №{id}",
+    "memorialUpdated": "Мемориал жаңартылды",
+    "public": "Жария",
+    "createdDate": "Жасалған: {date}",
     "createReburialTitle": "ҚАЙТА ЖЕРЛЕУ СҰРАУЫН ЖАСАУ",
     "oldBurialPlace": "Ескі жерлеу орны:",
     "newBurialPlace": "Жаңа жерлеу орны:",
@@ -200,11 +249,17 @@
     "upload": "Жүктеу",
     "createReburialRequest": "Әкімшілікке сұрау жасау",
     "reburialRequestCreatedSuccess": "Қайта жерлеу сұрауы сәтті жасалды",
+    "reburialRequestsTitle": "ҚАЙТА ЖЕРЛЕУ СҰРАУЛАРЫ",
+    "reburialRequestNumber": "Сұрау №{id}",
+    "noReburialRequests": "Қайта жерлеу сұраулары әлі жоқ",
+    "applicant": "Өтінуші:",
     "errors": {
       "loadData": "Деректерді жүктеу қатесі: {error}",
       "loadOrders": "Тапсырыстарды жүктеу қатесі: {error}",
       "loadRequests": "Өтінімдерді жүктеу қатесі: {error}",
       "loadNotifications": "Хабарламаларды жүктеу қатесі: {error}",
+      "loadAppeals": "Жүгінулерді жүктеу қатесі: {error}",
+      "loadMemorials": "Мемориалдарды жүктеу қатесі: {error}",
       "generic": "Қате: {error}",
       "userPhoneNotAvailable": "Пайдаланушы телефонын алу мүмкін болмады",
       "createAppeal": "Жүгіну жасау қатесі",
@@ -219,8 +274,49 @@
       "enterReburialReason": "Қайта жерлеу себебін енгізіңіз",
       "uploadDeathCertificate": "Қайтыс болу туралы куәлікті жүктеңіз",
       "uploadKinshipConfirmation": "Туыстық растауды жүктеңіз",
-      "uploadGraveDocument": "Қабірге құжат жүктеңіз"
+      "uploadGraveDocument": "Қабірге құжат жүктеңіз",
+      "loadReburialRequests": "Қайта жерлеу сұрауларын жүктеу қатесі: {error}"
     }
+  },
+  "memorialDetail": {
+    "memorialId": "МЕМОРИАЛ ID: {id}",
+    "retry": "Қайталау",
+    "updateMemorial": "Мемориалды жаңарту",
+    "shareInDevelopment": "Бөлісу — әзірленуде",
+    "infoTitle": "Мемориал туралы ақпарат",
+    "creator": "Жасаған:",
+    "deceased": "Қайтыс болған:",
+    "visibility": "Жариялылық:",
+    "public": "Жария",
+    "private": "Жеке",
+    "lastUpdated": "Соңғы жаңартылған:",
+    "loadError": "Мемориалды жүктеу мүмкін болмады",
+    "errors": {
+      "pickPhotos": "Фотосуреттерді таңдау қатесі",
+      "pickFiles": "Файлдарды таңдау қатесі",
+      "loginRequired": "Аккаунтқа кіріңіз",
+      "generic": "Қате: {message}",
+      "genericDetail": "Қате: {error}"
+    },
+    "uploadedPhotos": "Жүктелген фото ({count})",
+    "deleteAll": "Барлығын өшіру",
+    "addMorePhotos": "+ Тағы фото қосу",
+    "existing": "БАР",
+    "preview": "{label} — алдын ала қарау",
+    "epitaph": "Эпитафия",
+    "epitaphHint": "Эпитафия мәтіні",
+    "memoryAbout": "Адам туралы естелік:",
+    "memoryHint": "Адам туралы мәтін",
+    "publicPerson": "Жария тұлға",
+    "privateMemorialNote": "Бұл адамның сандық мемориалы жеке және тек сілтеме бойынша қолжетімді",
+    "achievements": "Жетістіктер",
+    "uploadFilesOrDrag": "Файлдарды жүктеңіз немесе сүйреңіз",
+    "achievementPhotos": "Жетістік фотолары ({count})",
+    "achievementPhotoLabel": "Жетістік фотосы",
+    "videos": "Бейне материалдар",
+    "youtubeLinkHint": "YouTube сілтемесін қойыңыз",
+    "add": "Қосу",
+    "cancel": "Болдырмау"
   },
   "about": {
     "logoFallback": "ORYNAI",

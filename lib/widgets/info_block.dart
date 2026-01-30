@@ -202,7 +202,7 @@ class InfoBlock extends StatelessWidget {
                             child: Center(
                               child: CustomPaint(
                                 size: const Size(16, 8),
-                                painter: TooltipTailPainter(isUpward: true),
+                                painter: TooltipTailPainter(isUpward: false),
                               ),
                             ),
                           ),

@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'constants.dart';
 import 'widgets/header.dart';
+import 'widgets/restart_widget.dart';
 import 'widgets/service_card.dart';
 import 'widgets/step_card.dart';
 import 'widgets/info_block.dart';
@@ -168,13 +169,14 @@ class _MyAppState extends State<MyApp> {
       print('🔍 [${_getTimestamp()}] Chucker Flutter navigatorObserver добавлен');
     }
 
-    return MaterialApp(
-      title: 'app.title'.tr(),
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      navigatorObservers: navigatorObservers,
-      theme: ThemeData(
+    return RestartWidget(
+      child: MaterialApp(
+        title: 'app.title'.tr(),
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
+        navigatorObservers: navigatorObservers,
+        theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.buttonBackground,
           brightness: Brightness.light,
@@ -200,7 +202,8 @@ class _MyAppState extends State<MyApp> {
           labelSmall: TextStyle(fontFamily: 'Manrope'),
         ),
       ),
-      home: const HomePage(),
+        home: const HomePage(),
+      ),
     );
   }
 }
@@ -1112,7 +1115,7 @@ class _HomePageState extends State<HomePage> {
                                   onPressed: () {
                                     // TODO: Открыть чат
                                   },
-                                  backgroundColor: AppColors.headerScrolled,
+                                  backgroundColor: AppColors.buttonBackground,
                                   child: const Icon(
                                     Icons.chat_bubble_outline,
                                     color: Colors.white,

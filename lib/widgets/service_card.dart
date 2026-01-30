@@ -20,22 +20,25 @@ class _CompactAppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? AppColors.buttonBackground,
-        foregroundColor: foregroundColor ?? Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor ?? AppColors.buttonBackground,
+          foregroundColor: foregroundColor ?? Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
         ),
-        elevation: 0,
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -112,37 +115,34 @@ class ServiceCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          // Кнопка и информационная иконка
-          showInfoText
+          // Кнопка и (при наличии тултипа) информационная иконка; текст "Как это работает" только при showInfoText
+          tooltipKey != null
               ? Row(
                   children: [
-                    // Кнопка занимает только необходимую ширину
-                    _CompactAppButton(
-                      text: buttonText,
-                      onPressed: onButtonPressed ?? () {},
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.iconAndText,
+                    Expanded(
+                      child: _CompactAppButton(
+                        text: buttonText,
+                        onPressed: onButtonPressed ?? () {},
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.iconAndText,
+                      ),
                     ),
                     const SizedBox(width: AppSizes.paddingSmall),
-                    // Информационная иконка с подсказкой - занимает оставшееся место
-                    Expanded(
-                      child: TooltipWidget(
-                        tooltipKey: tooltipKey,
-                        tooltipText: tooltipText,
-                        openTooltipId: openTooltipId,
-                        showInfoText: showInfoText,
-                        onTap: onInfoTap,
-                      ),
+                    TooltipWidget(
+                      tooltipKey: tooltipKey,
+                      tooltipText: tooltipText,
+                      openTooltipId: openTooltipId,
+                      showInfoText: showInfoText,
+                      onTap: onInfoTap,
                     ),
                   ],
                 )
-              : // Кнопка на всю ширину, если нет текста "Как это работает"
-                AppButton(
-                    text: buttonText,
-                    onPressed: onButtonPressed ?? () {},
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.iconAndText,
-                  ),
+              : AppButton(
+                  text: buttonText,
+                  onPressed: onButtonPressed ?? () {},
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.iconAndText,
+                ),
         ],
       ),
     );

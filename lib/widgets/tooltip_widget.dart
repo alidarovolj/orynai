@@ -133,105 +133,15 @@ class TooltipWidget extends StatelessWidget {
                     ),
                   ),
           ),
+        // Стрелка тултипа — всегда по центру иконки (иконка 24px, центр 12px; стрелка 16px → left: 4)
         if (openTooltipId == tooltipKey && tooltipText != null)
           Positioned(
+            left: 4,
             bottom: 32,
-            left: showInfoText ? 0 : null,
-            right: showInfoText ? 0 : 20,
-            child: showInfoText
-                ? Center(
-                    child: CustomPaint(
-                      size: const Size(16, 8),
-                      painter: TooltipTailPainter(isUpward: false),
-                    ),
-                  )
-                : CustomPaint(
-                    size: const Size(16, 8),
-                    painter: TooltipTailPainter(isUpward: false),
-                  ),
-          ),
-        // Тултип (всплывающая подсказка)
-        if (openTooltipId == tooltipKey && tooltipText != null)
-          Positioned(
-            bottom: 40,
-            left: showInfoText ? -120 : null,
-            right: showInfoText ? -120 : 0,
-            child: showInfoText
-                ? Center(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Container(
-                        constraints: const BoxConstraints(
-                          maxWidth: 280,
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          tooltipText!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.iconAndText,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                : Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        maxWidth: 280,
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        tooltipText!,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.iconAndText,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
-        if (openTooltipId == tooltipKey && tooltipText != null)
-          Positioned(
-            bottom: 32,
-            left: showInfoText ? 0 : null,
-            right: showInfoText ? 0 : 20,
-            child: showInfoText
-                ? Center(
-                    child: CustomPaint(
-                      size: const Size(16, 8),
-                      painter: TooltipTailPainter(isUpward: false),
-                    ),
-                  )
-                : CustomPaint(
-                    size: const Size(16, 8),
-                    painter: TooltipTailPainter(isUpward: false),
-                  ),
+            child: CustomPaint(
+              size: const Size(16, 8),
+              painter: TooltipTailPainter(isUpward: false),
+            ),
           ),
       ],
     );

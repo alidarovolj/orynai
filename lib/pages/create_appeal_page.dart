@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../services/api_service.dart';
 import '../services/auth_state_manager.dart';
@@ -22,9 +23,9 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
   static const int _maxContentLength = 3500;
 
   static const List<Map<String, dynamic>> _appealTypes = [
-    {'id': 1, 'name': 'Жалоба'},
-    {'id': 2, 'name': 'Предложение'},
-    {'id': 3, 'name': 'Запросы информации'},
+    {'id': 1, 'key': 'complaint'},
+    {'id': 2, 'key': 'suggestion'},
+    {'id': 3, 'key': 'infoRequest'},
   ];
 
   @override
@@ -51,7 +52,7 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
   Future<void> _createAppeal() async {
     if (_selectedTypeId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Выберите тип обращения')),
+        SnackBar(content: Text('profile.selectAppealType'.tr())),
       );
       return;
     }
@@ -59,7 +60,7 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
     final content = _contentController.text.trim();
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите текст обращения')),
+        SnackBar(content: Text('profile.enterAppealText'.tr())),
       );
       return;
     }
@@ -68,7 +69,7 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Текст обращения не должен превышать $_maxContentLength символов',
+            'profile.appealTextMaxLength'.tr(namedArgs: {'max': _maxContentLength.toString()}),
           ),
         ),
       );
@@ -82,7 +83,7 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
       final userPhone = authManager.currentUser?.phone ?? '';
 
       if (userPhone.isEmpty) {
-        throw Exception('Не удалось получить номер телефона пользователя');
+        throw Exception('profile.errors.userPhoneNotAvailable'.tr());
       }
 
       await _apiService.createAkimatAppeal(
@@ -94,20 +95,20 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Обращение успешно создано'),
-          backgroundColor: Color(0xFF4CAF50),
+        SnackBar(
+          content: Text('profile.appealCreatedSuccess'.tr()),
+          backgroundColor: const Color(0xFF4CAF50),
         ),
       );
       Navigator.pop(context, true);
     } catch (e) {
       debugPrint('Error creating akimat appeal: $e');
       if (!mounted) return;
-      String message = 'Ошибка создания обращения';
+      String message = 'profile.errors.createAppeal'.tr();
       if (e is ApiException) {
         message = e.body?['message']?.toString() ?? e.message;
       } else {
-        message = 'Ошибка создания обращения: ${e.toString()}';
+        message = 'profile.errors.createAppealWithError'.tr(namedArgs: {'error': e.toString()});
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), duration: const Duration(seconds: 5)),
@@ -144,8 +145,8 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'СОЗДАНИЕ ОБРАЩЕНИЯ В АКИМАТ',
+                        Text(
+                          'profile.createAkimatAppealTitle'.tr(),
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
@@ -154,8 +155,8 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
                           ),
                         ),
                         const SizedBox(height: AppSizes.paddingXLarge),
-                        const Text(
-                          'Тип обращения',
+                        Text(
+                          'profile.appealType'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -178,17 +179,18 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
                             isExpanded: true,
                             underline: const SizedBox(),
                             hint: Text(
-                              'Выберите тип обращения',
+                              'profile.selectAppealType'.tr(),
                               style: TextStyle(
                                 color: AppColors.accordionBorder,
                                 fontFamily: 'Manrope',
                               ),
                             ),
                             items: _appealTypes.map((t) {
+                              final key = t['key'] as String;
                               return DropdownMenuItem<int>(
                                 value: t['id'] as int,
                                 child: Text(
-                                  t['name'] as String,
+                                  'profile.appealTypes.$key'.tr(),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     color: Color(0xFF1d1c1a),
@@ -201,8 +203,8 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
                           ),
                         ),
                         const SizedBox(height: AppSizes.paddingXLarge),
-                        const Text(
-                          'Обращение',
+                        Text(
+                          'profile.appeal'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -224,7 +226,7 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
                             maxLines: 10,
                             maxLength: _maxContentLength,
                             decoration: InputDecoration(
-                              hintText: 'Введите текст обращения',
+                              hintText: 'profile.enterAppealText'.tr(),
                               hintStyle: TextStyle(
                                 color: AppColors.accordionBorder,
                                 fontFamily: 'Manrope',
@@ -269,8 +271,8 @@ class _CreateAppealPageState extends State<CreateAppealPage> {
                                       ),
                                     ),
                                   )
-                                : const Text(
-                                    'Создать обращение',
+                                : Text(
+                                    'profile.createAppeal'.tr(),
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,

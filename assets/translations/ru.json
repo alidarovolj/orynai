@@ -101,6 +101,11 @@
     "phone": "+7 (775) 810-01-10",
     "email": "info@orynai.kz"
   },
+  "supportBlock": {
+    "title": "Помощь и поддержка",
+    "call247": "Позвонить 24/7",
+    "writeWhatsApp": "Написать в WhatsApp"
+  },
   "menu": {
     "forClients": "КЛИЕНТАМ",
     "loginRegister": "Вход/Регистрация",
@@ -110,7 +115,8 @@
     "catalog": "Каталог",
     "bookPlace": "Забронировать место",
     "cart": "Корзина",
-    "profile": "Профиль"
+    "profile": "Профиль",
+    "logout": "Выйти"
   },
   "footer": {
     "aboutUs": "О нас",
@@ -123,6 +129,38 @@
   },
   "header": {
     "searchPlaceholder": "Поиск"
+  },
+  "login": {
+    "titlePhone": "Вход в личный кабинет",
+    "titleCode": "Подтвердите номер",
+    "titleRegistration": "Зарегистрироваться",
+    "enterPhoneLabel": "Введите номер мобильного телефона:",
+    "enterPhoneHint": "Введите номер",
+    "getCodeWhatsApp": "Получить код в WhatsApp",
+    "codeSentTo": "Введите код из WhatsApp. Мы отправили его на номер",
+    "resendCodeIn": "Отправить код повторно: через {seconds}",
+    "resendCode": "Отправить код повторно",
+    "confirm": "Подтвердить",
+    "enterIinHint": "Введите ИИН",
+    "enterSurnameHint": "Введите фамилию",
+    "enterNameHint": "Введите имя",
+    "enterPatronymicHint": "Введите отчество",
+    "agreeTerms": "Я согласен с правилами использования и политикой конфиденциальности",
+    "register": "Зарегистрироваться",
+    "errors": {
+      "invalidPhone": "Введите корректный номер телефона (начинается с 7)",
+      "errorGeneric": "Ошибка: {message}",
+      "errorSendCode": "Ошибка отправки кода: {error}",
+      "enterFourDigitCode": "Введите 4-значный код",
+      "invalidCode": "Неверный код",
+      "errorVerify": "Ошибка верификации: {error}",
+      "iinMustBe12": "ИИН должен содержать 12 цифр",
+      "errorIinRequest": "Ошибка запроса ИИН: {error}",
+      "agreeToTerms": "Необходимо согласие с правилами использования",
+      "fillAllFields": "Заполните все поля",
+      "registrationError": "Ошибка регистрации",
+      "registrationErrorDetail": "Ошибка регистрации: {error}"
+    }
   },
   "errors": {
     "whatsappNotAvailable": "Не удалось открыть WhatsApp",
@@ -186,6 +224,17 @@
     "appealTextMaxLength": "Текст обращения не должен превышать {max} символов",
     "createAppeal": "Создать обращение",
     "appealCreatedSuccess": "Обращение успешно создано",
+    "akimatAppealsTitle": "ОБРАЩЕНИЕ В АКИМАТ",
+    "noAppeals": "Обращений пока нет",
+    "appealNumber": "Обращение №{id}",
+    "appealTypeLabel": "Тип обращения:",
+    "status": "Статус",
+    "appealContentLabel": "Обращение:",
+    "noMemorials": "Цифровых мемориалов пока нет",
+    "memorialNumber": "Мемориал №{id}",
+    "memorialUpdated": "Мемориал обновлён",
+    "public": "Публичный",
+    "createdDate": "Создан: {date}",
     "createReburialTitle": "СОЗДАНИЕ ЗАПРОСА НА ПЕРЕЗАХОРОНЕНИЕ",
     "oldBurialPlace": "Старое место захоронения:",
     "newBurialPlace": "Новое место захоронения:",
@@ -200,11 +249,17 @@
     "upload": "Загрузить",
     "createReburialRequest": "Создать запрос в акимат",
     "reburialRequestCreatedSuccess": "Запрос на перезахоронение успешно создан",
+    "reburialRequestsTitle": "ЗАПРОСЫ НА ПЕРЕЗАХОРОНЕНИЕ",
+    "reburialRequestNumber": "Запрос №{id}",
+    "noReburialRequests": "Запросов на перезахоронение пока нет",
+    "applicant": "Заявитель:",
     "errors": {
       "loadData": "Ошибка загрузки данных: {error}",
       "loadOrders": "Ошибка загрузки заказов: {error}",
       "loadRequests": "Ошибка загрузки заявок: {error}",
       "loadNotifications": "Ошибка загрузки уведомлений: {error}",
+      "loadAppeals": "Ошибка загрузки обращений: {error}",
+      "loadMemorials": "Ошибка загрузки мемориалов: {error}",
       "generic": "Ошибка: {error}",
       "userPhoneNotAvailable": "Не удалось получить номер телефона пользователя",
       "createAppeal": "Ошибка создания обращения",
@@ -219,8 +274,49 @@
       "enterReburialReason": "Введите причину перезахоронения",
       "uploadDeathCertificate": "Загрузите свидетельство о смерти",
       "uploadKinshipConfirmation": "Загрузите подтверждение родства",
-      "uploadGraveDocument": "Загрузите документ на могилу"
+      "uploadGraveDocument": "Загрузите документ на могилу",
+      "loadReburialRequests": "Ошибка загрузки запросов на перезахоронение: {error}"
     }
+  },
+  "memorialDetail": {
+    "memorialId": "МЕМОРИАЛ ID: {id}",
+    "retry": "Повторить",
+    "updateMemorial": "Обновить мемориал",
+    "shareInDevelopment": "Поделиться — в разработке",
+    "infoTitle": "Информация о мемориале",
+    "creator": "Создатель:",
+    "deceased": "Умерший:",
+    "visibility": "Публичность:",
+    "public": "Публичный",
+    "private": "Приватный",
+    "lastUpdated": "Последнее обновление:",
+    "loadError": "Не удалось загрузить мемориал",
+    "errors": {
+      "pickPhotos": "Ошибка выбора фотографий",
+      "pickFiles": "Ошибка выбора файлов",
+      "loginRequired": "Войдите в аккаунт",
+      "generic": "Ошибка: {message}",
+      "genericDetail": "Ошибка: {error}"
+    },
+    "uploadedPhotos": "Загруженные фото ({count})",
+    "deleteAll": "Удалить все",
+    "addMorePhotos": "+ Добавить еще фото",
+    "existing": "СУЩЕСТВУЮЩЕЕ",
+    "preview": "{label} — превью",
+    "epitaph": "Эпитафия",
+    "epitaphHint": "Текст эпитафии",
+    "memoryAbout": "Память о человеке:",
+    "memoryHint": "Текст о человеке",
+    "publicPerson": "Публичная личность",
+    "privateMemorialNote": "Цифровой мемориал этого человека приватный и доступен только по ссылке",
+    "achievements": "Достижения",
+    "uploadFilesOrDrag": "Загрузите файлы или перетащите их",
+    "achievementPhotos": "Фото достижений ({count})",
+    "achievementPhotoLabel": "Фото достижения",
+    "videos": "Видеоматериалы",
+    "youtubeLinkHint": "Вставьте ссылку на YouTube",
+    "add": "Добавить",
+    "cancel": "Отменить"
   },
   "about": {
     "logoFallback": "ORYNAI",

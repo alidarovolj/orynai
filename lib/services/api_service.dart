@@ -8,6 +8,7 @@ import 'auth_state_manager.dart';
 import '../models/appeal.dart';
 import '../models/deceased.dart';
 import '../models/memorial.dart';
+import '../models/reburial_request_item.dart';
 
 class ApiService {
   static ApiService? _instance;
@@ -1094,17 +1095,157 @@ class ApiService {
       if (list is List && list.isNotEmpty) {
         final first = list.first;
         if (first is String && first.startsWith('http')) return first;
-        final u = first is Map ? (first['url'] ?? first['path']) : null;
+        final u = first is Map
+            ? (first['fileUrl'] ?? first['url'] ?? first['path'])
+            : null;
         if (u != null && u.toString().startsWith('http')) return u.toString();
       }
     }
     if (decoded is List && decoded.isNotEmpty) {
       final first = decoded.first;
       if (first is String && first.startsWith('http')) return first;
-      final u = first is Map ? (first['url'] ?? first['path']) : null;
+      final u = first is Map
+          ? (first['fileUrl'] ?? first['url'] ?? first['path'])
+          : null;
       if (u != null && u.toString().startsWith('http')) return u.toString();
     }
     return null;
+  }
+
+  /// Загрузка файла в акимат (для запросов на перезахоронение и т.п.).
+  /// POST /api/v7/akimat/files, multipart 'files'.
+  /// Возвращает URL загруженного файла (S3).
+  Future<String> uploadAkimatFile(File file) async {
+    try {
+      final fullPath = '$baseUrl/api/v7/akimat/files';
+      final uri = Uri.parse(fullPath);
+
+      final request = http.MultipartRequest('POST', uri);
+
+      final token = await _getAuthToken();
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers['Accept'] = 'application/json, text/plain, */*';
+      request.headers['Origin'] = baseUrl;
+      request.headers['Referer'] = '$baseUrl/';
+
+      final fileName = file.path.split(RegExp(r'[/\\]')).last;
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'files',
+          file.path,
+          filename: fileName,
+        ),
+      );
+
+      debugPrint('📤 [API] POST multipart $fullPath file=$fileName');
+
+      final streamedResponse = await _client.send(request);
+      final response = await http.Response.fromStream(streamedResponse);
+
+      debugPrint('📥 [API] Akimat upload response status: ${response.statusCode}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final errorBody = response.body.isNotEmpty
+            ? json.decode(response.body) as Map<String, dynamic>
+            : <String, dynamic>{};
+        throw ApiException(
+          statusCode: response.statusCode,
+          message: errorBody['message']?.toString() ??
+              errorBody['description']?.toString() ??
+              'Upload failed',
+          body: errorBody,
+        );
+      }
+
+      final decoded = response.body.isNotEmpty ? json.decode(response.body) : null;
+      final url = _extractUploadUrl(decoded);
+      if (url == null || url.isEmpty) {
+        final fallback = _extractUrlFromRawBody(response.body);
+        if (fallback == null || fallback.isEmpty) {
+          throw ApiException(
+            statusCode: response.statusCode,
+            message: 'Upload response did not contain URL',
+            body: decoded is Map ? decoded as Map<String, dynamic> : <String, dynamic>{},
+          );
+        }
+        return fallback;
+      }
+      return url;
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      debugPrint('Error uploading akimat file: $e');
+      throw ApiException(statusCode: 0, message: 'Upload error: $e');
+    }
+  }
+
+  /// Список заявок на перезахоронение текущего пользователя.
+  /// GET /api/v3/rip-government/v1/request/my.
+  Future<List<ReburialRequestItem>> getMyReburialRequests() async {
+    try {
+      final raw = await get(
+        '/api/v3/rip-government/v1/request/my',
+        requiresAuth: true,
+      );
+      final list = raw is List ? raw : <dynamic>[];
+      return list
+          .map((e) => ReburialRequestItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error loading my reburial requests: $e');
+      rethrow;
+    }
+  }
+
+  /// Запрос на перезахоронение.
+  /// PUT /api/v3/rip-government/v1/request.
+  /// Возвращает id созданного запроса (число).
+  Future<int> createReburialRequest({
+    required String userPhone,
+    required int fromBurialId,
+    required int toBurialId,
+    required String reason,
+    required String foreignCemetry,
+    required int akimatId,
+    required String deathCertificate,
+    required String proofOfRelation,
+    required String graveDoc,
+  }) async {
+    try {
+      final response = await put(
+        '/api/v3/rip-government/v1/request',
+        body: {
+          'userPhone': userPhone,
+          'fromBurialId': fromBurialId,
+          'toBurialId': toBurialId,
+          'reason': reason,
+          'foreign_cemetry': foreignCemetry,
+          'akimatId': akimatId,
+          'death_certificate': deathCertificate,
+          'proof_of_relation': proofOfRelation,
+          'grave_doc': graveDoc,
+        },
+        requiresAuth: true,
+      );
+
+      // Ответ — число (id запроса). put() при теле "28" возвращает {'success': true, 'data': 28}
+      final data = response['data'];
+      if (data is int) return data;
+      if (data is num) return data.toInt();
+      final id = response['id'];
+      if (id is int) return id;
+      if (id is num) return id.toInt();
+      throw ApiException(
+        statusCode: 0,
+        message: 'Unexpected reburial request response: $response',
+        body: response,
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      debugPrint('Error creating reburial request: $e');
+      rethrow;
+    }
   }
 
   /// Один мемориал по id. GET /api/v1/memorials/{id}

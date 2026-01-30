@@ -4,6 +4,7 @@ import '../constants.dart';
 import '../services/auth_state_manager.dart';
 import 'login_modal.dart';
 import 'app_button.dart';
+import 'restart_widget.dart';
 import '../pages/catalog_page.dart';
 import '../pages/cart_page.dart';
 import '../pages/cemeteries_page.dart';
@@ -49,10 +50,11 @@ class MenuModal extends StatelessWidget {
                         final isSelected =
                             context.locale.languageCode == 'ru';
                         return GestureDetector(
-                          onTap: () {
-                            context.setLocale(const Locale('ru'));
-                            Navigator.pop(context);
-                            MenuModal.show(context);
+                          onTap: () async {
+                            if (context.locale.languageCode == 'ru') return;
+                            await context.setLocale(const Locale('ru'));
+                            if (!context.mounted) return;
+                            RestartWidget.restart(context);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -88,10 +90,11 @@ class MenuModal extends StatelessWidget {
                         final isSelected =
                             context.locale.languageCode == 'kk';
                         return GestureDetector(
-                          onTap: () {
-                            context.setLocale(const Locale('kk'));
-                            Navigator.pop(context);
-                            MenuModal.show(context);
+                          onTap: () async {
+                            if (context.locale.languageCode == 'kk') return;
+                            await context.setLocale(const Locale('kk'));
+                            if (!context.mounted) return;
+                            RestartWidget.restart(context);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -328,6 +331,43 @@ class MenuModal extends StatelessWidget {
               },
             ),
             const SizedBox(height: AppSizes.paddingMedium),
+            // Кнопка «Выйти» в конце меню (только для авторизованных)
+            Builder(
+              builder: (context) {
+                if (!AuthStateManager().isAuthenticated) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: AppSizes.paddingSmall),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await AuthStateManager().logout();
+                        if (!context.mounted) return;
+                        RestartWidget.restart(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'menu.logout'.tr(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

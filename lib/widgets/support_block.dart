@@ -70,10 +70,10 @@ class SupportBlock extends StatelessWidget {
             // Заголовок с иконкой наушников
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Помощь и поддержка',
-                    style: TextStyle(
+                    'supportBlock.title'.tr(),
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -105,9 +105,9 @@ class SupportBlock extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Позвонить 24/7',
-                      style: TextStyle(
+                    Text(
+                      'supportBlock.call247'.tr(),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -140,16 +140,15 @@ class SupportBlock extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Написать в WhatsApp',
-                      style: TextStyle(
+                    Text(
+                      'supportBlock.writeWhatsApp'.tr(),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Иконка WhatsApp
                     const Icon(
                       Icons.chat_bubble,
                       color: Colors.white,

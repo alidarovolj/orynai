@@ -33,6 +33,13 @@ class AuthStateManager {
     await prefs.remove(_userDataKey);
   }
 
+  /// Выход из аккаунта: очистка пользователя и всего локального хранилища.
+  Future<void> logout() async {
+    _currentUser = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+
   // Загрузка токена из хранилища
   Future<String?> getStoredToken() async {
     final prefs = await SharedPreferences.getInstance();

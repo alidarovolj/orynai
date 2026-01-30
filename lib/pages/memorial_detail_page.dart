@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../models/deceased.dart';
 import '../models/memorial.dart';
@@ -93,8 +94,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
     }
   }
 
-  String _formatDateTime(String? iso) {
-    if (iso == null || iso.isEmpty) return '—';
+  String _formatDateTime(BuildContext context, String? iso) {
+    if (iso == null || iso.isEmpty) return 'profile.emptyValue'.tr();
     try {
       final d = DateTime.parse(iso);
       return DateFormat('dd.MM.yyyy, HH:mm').format(d);
@@ -113,7 +114,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
       debugPrint('Error picking photos: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка выбора фотографий')),
+          SnackBar(content: Text('memorialDetail.errors.pickPhotos'.tr())),
         );
       }
     }
@@ -132,7 +133,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Ошибка выбора файлов')));
+        ).showSnackBar(SnackBar(content: Text('memorialDetail.errors.pickFiles'.tr())));
       }
     }
   }
@@ -174,7 +175,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Войдите в аккаунт')));
+        ).showSnackBar(SnackBar(content: Text('memorialDetail.errors.loginRequired'.tr())));
       }
       return;
     }
@@ -230,7 +231,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка: ${e.message}')));
+        ).showSnackBar(SnackBar(content: Text('memorialDetail.errors.generic'.tr(namedArgs: {'message': e.message}))));
       }
     } catch (e) {
       debugPrint('Error updating memorial: $e');
@@ -238,7 +239,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+        ).showSnackBar(SnackBar(content: Text('memorialDetail.errors.genericDetail'.tr(namedArgs: {'error': e.toString()}))));
       }
     }
   }
@@ -286,7 +287,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Не удалось загрузить мемориал',
+              'memorialDetail.loadError'.tr(),
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -309,7 +310,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
             ),
             const SizedBox(height: AppSizes.paddingLarge),
             AppButton(
-              text: 'Повторить',
+              text: 'memorialDetail.retry'.tr(),
               onPressed: _loadData,
               backgroundColor: AppColors.buttonBackground,
             ),
@@ -334,7 +335,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
             children: [
               Expanded(
                 child: Text(
-                  'МЕМОРИАЛ ID: ${m.id}',
+                  'memorialDetail.memorialId'.tr(namedArgs: {'id': m.id.toString()}),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -347,7 +348,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
                 icon: const Icon(Icons.share),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Поделиться — в разработке')),
+                    SnackBar(content: Text('memorialDetail.shareInDevelopment'.tr())),
                   );
                 },
               ),
@@ -370,7 +371,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
           if (canEdit) ...[
             const SizedBox(height: AppSizes.paddingXLarge),
             AppButton(
-              text: 'Обновить мемориал',
+              text: 'memorialDetail.updateMemorial'.tr(),
               onPressed: _updateMemorial,
               backgroundColor: AppColors.buttonBackground,
             ),
@@ -391,8 +392,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Информация о мемориале',
+          Text(
+            'memorialDetail.infoTitle'.tr(),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -401,10 +402,10 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
             ),
           ),
           const SizedBox(height: AppSizes.paddingMedium),
-          _infoRow('Создатель:', m.creatorPhone),
-          if (_deceased != null) _infoRow('Умерший:', _deceased!.fullName),
-          _infoRow('Публичность:', m.isPublic ? 'Публичный' : 'Приватный'),
-          _infoRow('Последнее обновление:', _formatDateTime(m.updatedAt)),
+          _infoRow('memorialDetail.creator'.tr(), m.creatorPhone),
+          if (_deceased != null) _infoRow('memorialDetail.deceased'.tr(), _deceased!.fullName),
+          _infoRow('memorialDetail.visibility'.tr(), m.isPublic ? 'memorialDetail.public'.tr() : 'memorialDetail.private'.tr()),
+          _infoRow('memorialDetail.lastUpdated'.tr(), _formatDateTime(context, m.updatedAt)),
         ],
       ),
     );
@@ -456,7 +457,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Загруженные фото ($total)',
+              'memorialDetail.uploadedPhotos'.tr(namedArgs: {'count': total.toString()}),
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -467,8 +468,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
             if (canEdit && total > 0)
               TextButton(
                 onPressed: _deleteAllPhotos,
-                child: const Text(
-                  'Удалить все',
+                child: Text(
+                  'memorialDetail.deleteAll'.tr(),
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.w600,
@@ -515,9 +516,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
                   style: BorderStyle.solid,
                 ),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  '+ Добавить еще фото',
+                  'memorialDetail.addMorePhotos'.tr(),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -579,10 +580,10 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
                 color: const Color(0xFF0D7377),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  'СУЩЕСТВУЮЩЕЕ',
-                  style: TextStyle(
+                  'memorialDetail.existing'.tr(),
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -615,7 +616,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
   Widget _placeholder(String label) {
     return Center(
       child: Text(
-        '$label Preview',
+        'memorialDetail.preview'.tr(namedArgs: {'label': label}),
         style: TextStyle(
           fontSize: 12,
           color: AppColors.accordionBorder,
@@ -629,8 +630,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Эпитафия',
+        Text(
+          'memorialDetail.epitaph'.tr(),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -643,7 +644,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
           controller: _epitaphController,
           maxLines: 5,
           readOnly: !canEdit,
-          decoration: _inputDecoration('Тест эпитафия'),
+          decoration: _inputDecoration('memorialDetail.epitaphHint'.tr()),
           style: const TextStyle(
             fontSize: 16,
             color: Color(0xFF1d1c1a),
@@ -658,8 +659,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Память о человеке:',
+        Text(
+          'memorialDetail.memoryAbout'.tr(),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -672,7 +673,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
           controller: _memoryController,
           maxLines: 8,
           readOnly: !canEdit,
-          decoration: _inputDecoration('Тест память'),
+          decoration: _inputDecoration('memorialDetail.memoryHint'.tr()),
           style: const TextStyle(
             fontSize: 16,
             color: Color(0xFF1d1c1a),
@@ -716,9 +717,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
               activeThumbColor: AppColors.buttonBackground,
             ),
             const SizedBox(width: AppSizes.paddingSmall),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Публичная личность',
+                'memorialDetail.publicPerson'.tr(),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -732,7 +733,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
         if (!_isPublic) ...[
           const SizedBox(height: AppSizes.paddingSmall),
           Text(
-            'Цифровой мемориал этого человека приватный и доступен только по ссылке',
+            'memorialDetail.privateMemorialNote'.tr(),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w400,
@@ -751,8 +752,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Достижения',
+        Text(
+          'memorialDetail.achievements'.tr(),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -784,8 +785,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
                     color: AppColors.buttonBackground,
                   ),
                   const SizedBox(height: AppSizes.paddingMedium),
-                  const Text(
-                    'Загрузите файлы или перетащите их',
+                  Text(
+                    'memorialDetail.uploadFilesOrDrag'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -800,7 +801,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
         if (total > 0) ...[
           const SizedBox(height: AppSizes.paddingMedium),
           Text(
-            'Фото достижений ($total)',
+            'memorialDetail.achievementPhotos'.tr(namedArgs: {'count': total.toString()}),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -816,14 +817,14 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
               ..._achievementUrls.asMap().entries.map(
                 (e) => _achievementPreview(
                   url: e.value,
-                  label: 'Achievement photo',
+                  label: 'memorialDetail.achievementPhotoLabel'.tr(),
                   isExisting: true,
                 ),
               ),
               ..._newAchievements.asMap().entries.map(
                 (e) => _achievementPreview(
                   file: e.value,
-                  label: 'Achievement photo',
+                  label: 'memorialDetail.achievementPhotoLabel'.tr(),
                   isExisting: false,
                   onRemove: canEdit ? () => _removeNewAchievement(e.key) : null,
                 ),
@@ -881,10 +882,10 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
                 color: const Color(0xFF0D7377),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  'СУЩЕСТВУЮЩЕЕ',
-                  style: TextStyle(
+                  'memorialDetail.existing'.tr(),
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -918,8 +919,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Видеоматериалы',
+        Text(
+          'memorialDetail.videos'.tr(),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -934,7 +935,7 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
               child: TextField(
                 controller: _videoLinkController,
                 readOnly: !canEdit,
-                decoration: _inputDecoration('Вставьте ссылку на YouTube'),
+                decoration: _inputDecoration('memorialDetail.youtubeLinkHint'.tr()),
                 style: const TextStyle(
                   fontSize: 16,
                   color: Color(0xFF1d1c1a),
@@ -955,8 +956,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Добавить',
+              child: Text(
+                'memorialDetail.add'.tr(),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -978,8 +979,8 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Отменить',
+              child: Text(
+                'memorialDetail.cancel'.tr(),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

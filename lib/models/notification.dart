@@ -93,11 +93,15 @@ class NotificationsResponse {
   });
 
   factory NotificationsResponse.fromJson(Map<String, dynamic> json) {
+    final notificationsRaw = json['notifications'];
+    final List<Notification> list = notificationsRaw == null
+        ? []
+        : (notificationsRaw as List)
+            .map((item) => Notification.fromJson(item as Map<String, dynamic>))
+            .toList();
     return NotificationsResponse(
       limit: json['limit'] as int,
-      notifications: (json['notifications'] as List)
-          .map((item) => Notification.fromJson(item as Map<String, dynamic>))
-          .toList(),
+      notifications: list,
       offset: json['offset'] as int,
       total: json['total'] as int,
     );

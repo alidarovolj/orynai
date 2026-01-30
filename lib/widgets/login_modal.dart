@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:async';
 import '../constants.dart';
 import '../services/auth_service.dart';
@@ -125,8 +126,8 @@ class _LoginModalState extends State<LoginModal> {
     final phone = _getCleanPhone();
     if (phone.length < 11 || !phone.startsWith('7')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Введите корректный номер телефона (начинается с 7)'),
+        SnackBar(
+          content: Text('login.errors.invalidPhone'.tr()),
         ),
       );
       return;
@@ -148,12 +149,12 @@ class _LoginModalState extends State<LoginModal> {
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка: $result')));
+        ).showSnackBar(SnackBar(content: Text('login.errors.errorGeneric'.tr(namedArgs: {'message': result}))));
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Ошибка отправки кода: $e')));
+      ).showSnackBar(SnackBar(content: Text('login.errors.errorSendCode'.tr(namedArgs: {'error': e.toString()}))));
     } finally {
       setState(() {
         _isLoadingPhone = false;
@@ -201,7 +202,7 @@ class _LoginModalState extends State<LoginModal> {
     if (code.length != 4) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Введите 4-значный код')));
+      ).showSnackBar(SnackBar(content: Text('login.errors.enterFourDigitCode'.tr())));
       return;
     }
 
@@ -253,14 +254,14 @@ class _LoginModalState extends State<LoginModal> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['error']?['description'] ?? 'Неверный код'),
+            content: Text(result['error']?['description'] ?? 'login.errors.invalidCode'.tr()),
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Ошибка верификации: $e')));
+      ).showSnackBar(SnackBar(content: Text('login.errors.errorVerify'.tr(namedArgs: {'error': e.toString()}))));
     } finally {
       setState(() {
         _isLoadingCode = false;
@@ -272,7 +273,7 @@ class _LoginModalState extends State<LoginModal> {
     final iin = _iinController.text.trim();
     if (iin.length != 12) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ИИН должен содержать 12 цифр')),
+        SnackBar(content: Text('login.errors.iinMustBe12'.tr())),
       );
       return;
     }
@@ -288,7 +289,7 @@ class _LoginModalState extends State<LoginModal> {
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Ошибка запроса ИИН: $e')));
+      ).showSnackBar(SnackBar(content: Text('login.errors.errorIinRequest'.tr(namedArgs: {'error': e.toString()}))));
     } finally {
       setState(() {
         _isLoadingIin = false;
@@ -299,8 +300,8 @@ class _LoginModalState extends State<LoginModal> {
   Future<void> _register() async {
     if (!_agreedToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Необходимо согласие с правилами использования'),
+        SnackBar(
+          content: Text('login.errors.agreeToTerms'.tr()),
         ),
       );
       return;
@@ -315,7 +316,7 @@ class _LoginModalState extends State<LoginModal> {
     if (iin.isEmpty || surname.isEmpty || name.isEmpty || patronymic.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Заполните все поля')));
+      ).showSnackBar(SnackBar(content: Text('login.errors.fillAllFields'.tr())));
       return;
     }
 
@@ -384,12 +385,12 @@ class _LoginModalState extends State<LoginModal> {
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Ошибка регистрации')));
+        ).showSnackBar(SnackBar(content: Text('login.errors.registrationError'.tr())));
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Ошибка регистрации: $e')));
+      ).showSnackBar(SnackBar(content: Text('login.errors.registrationErrorDetail'.tr(namedArgs: {'error': e.toString()}))));
     } finally {
       setState(() {
         _isLoadingRegistration = false;
@@ -455,11 +456,11 @@ class _LoginModalState extends State<LoginModal> {
   String _getTitle() {
     switch (_currentStep) {
       case LoginStep.phone:
-        return 'Вход в личный кабинет';
+        return 'login.titlePhone'.tr();
       case LoginStep.code:
-        return 'Подтвердите номер';
+        return 'login.titleCode'.tr();
       case LoginStep.registration:
-        return 'Зарегистрироваться';
+        return 'login.titleRegistration'.tr();
     }
   }
 
@@ -467,16 +468,16 @@ class _LoginModalState extends State<LoginModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Введите номер мобильного телефона:',
-          style: TextStyle(fontSize: 14, color: AppColors.iconAndText),
+        Text(
+          'login.enterPhoneLabel'.tr(),
+          style: const TextStyle(fontSize: 14, color: AppColors.iconAndText),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
           decoration: InputDecoration(
-            hintText: 'Введите номер',
+            hintText: 'login.enterPhoneHint'.tr(),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -505,9 +506,9 @@ class _LoginModalState extends State<LoginModal> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : const Text(
-                    'Получить код в WhatsApp',
-                    style: TextStyle(
+                : Text(
+                    'login.getCodeWhatsApp'.tr(),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -523,9 +524,9 @@ class _LoginModalState extends State<LoginModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Введите код из WhatsApp. Мы отправили его на номер',
-          style: TextStyle(fontSize: 14, color: AppColors.iconAndText),
+        Text(
+          'login.codeSentTo'.tr(),
+          style: const TextStyle(fontSize: 14, color: AppColors.iconAndText),
         ),
         const SizedBox(height: 8),
         Text(
@@ -582,8 +583,8 @@ class _LoginModalState extends State<LoginModal> {
           onTap: _resendTimer == 0 ? _resendCode : null,
           child: Text(
             _resendTimer > 0
-                ? 'Отправить код повторно: через $_resendTimer'
-                : 'Отправить код повторно',
+                ? 'login.resendCodeIn'.tr(namedArgs: {'seconds': _resendTimer.toString()})
+                : 'login.resendCode'.tr(),
             style: TextStyle(
               fontSize: 14,
               color: _resendTimer > 0
@@ -613,9 +614,9 @@ class _LoginModalState extends State<LoginModal> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : const Text(
-                    'Подтвердить',
-                    style: TextStyle(
+                : Text(
+                    'login.confirm'.tr(),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -631,9 +632,9 @@ class _LoginModalState extends State<LoginModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          const Text(
-            'Введите номер мобильного телефона:',
-            style: TextStyle(fontSize: 14, color: AppColors.iconAndText),
+          Text(
+            'login.enterPhoneLabel'.tr(),
+            style: const TextStyle(fontSize: 14, color: AppColors.iconAndText),
           ),
           const SizedBox(height: 8),
           Text(
@@ -647,7 +648,7 @@ class _LoginModalState extends State<LoginModal> {
             maxLength: 12,
             enabled: !_isLoadingIin,
             decoration: InputDecoration(
-              hintText: 'Введите ИИН',
+              hintText: 'login.enterIinHint'.tr(),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -677,7 +678,7 @@ class _LoginModalState extends State<LoginModal> {
           TextField(
             controller: _surnameController,
             decoration: InputDecoration(
-              hintText: 'Введите фамилию',
+              hintText: 'login.enterSurnameHint'.tr(),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -691,7 +692,7 @@ class _LoginModalState extends State<LoginModal> {
           TextField(
             controller: _nameController,
             decoration: InputDecoration(
-              hintText: 'Введите имя',
+              hintText: 'login.enterNameHint'.tr(),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -705,7 +706,7 @@ class _LoginModalState extends State<LoginModal> {
           TextField(
             controller: _patronymicController,
             decoration: InputDecoration(
-              hintText: 'Введите отчество',
+              hintText: 'login.enterPatronymicHint'.tr(),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -733,9 +734,9 @@ class _LoginModalState extends State<LoginModal> {
                       _agreedToTerms = !_agreedToTerms;
                     });
                   },
-                  child: const Text(
-                    'Я согласен с правилами использования и политикой конфиденциальности',
-                    style: TextStyle(
+                  child: Text(
+                    'login.agreeTerms'.tr(),
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.iconAndText,
                     ),
@@ -765,9 +766,9 @@ class _LoginModalState extends State<LoginModal> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Зарегистрироваться',
-                      style: TextStyle(
+                  : Text(
+                      'login.register'.tr(),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
