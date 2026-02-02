@@ -41,5 +41,13 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Приложению нужен доступ к местоположению, чтобы проложить маршрут до выбранного места на карте.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>yandexmaps</string>
+		<string>comgooglemaps</string>
+		<string>maps</string>
+	</array>
 </dict>
 </plist>

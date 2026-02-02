@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart' hide Icon, TextStyle;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants.dart';
 import '../models/cemetery.dart';
 import '../models/grave.dart';
@@ -28,12 +32,26 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
   bool _isMapKitInitialized = false;
   Grave? _selectedGrave; // Выбранное место
   final Map<int, PolygonMapObject> _gravePolygons = {}; // ID могилы -> Polygon
+  PolylineMapObject? _routePolyline; // Маршрут на карте
+  bool _isBuildingRoute = false;
+
+  /// Контроллер нижнего листа: дефолт 65%, при «Проложить маршрут» — 40%.
+  static const double _sheetSizeDefault = 0.65;
+  static const double _sheetSizeRoute = 0.40;
+  final flutter.DraggableScrollableController _sheetController =
+      flutter.DraggableScrollableController();
 
   @override
   void initState() {
     super.initState();
     _initializeMapKit();
     _loadGraves();
+  }
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
   }
 
   // Инициализация Yandex MapKit только при открытии модального окна
@@ -97,7 +115,13 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
       setState(() => _isLoadingGraves = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: flutter.Text('booking.details.loadingGraves'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: flutter.Text(
+              'booking.details.loadingGraves'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
         );
       }
     }
@@ -163,6 +187,7 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
   // Обработка нажатия на могилу
   void _onGraveTap(Grave grave) {
     setState(() {
+      _routePolyline = null;
       // Сбрасываем выделение предыдущего места
       if (_selectedGrave != null &&
           _gravePolygons.containsKey(_selectedGrave!.id)) {
@@ -185,17 +210,209 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
     });
   }
 
+  /// Центр полигона могилы (среднее по координатам)
+  Point _getGraveCenter(Grave grave) {
+    if (grave.polygonData.coordinates.isEmpty) {
+      final lat = widget.cemetery.locationCoords[0];
+      final lon = widget.cemetery.locationCoords[1];
+      return Point(latitude: lat, longitude: lon);
+    }
+    double sumLat = 0, sumLon = 0;
+    final coords = grave.polygonData.coordinates;
+    for (final c in coords) {
+      sumLon += c[0];
+      sumLat += c[1];
+    }
+    return Point(
+      latitude: sumLat / coords.length,
+      longitude: sumLon / coords.length,
+    );
+  }
+
+  Future<Point?> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: flutter.Text('booking.details.locationDisabled'.tr()),
+          ),
+        );
+      }
+      return null;
+    }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: flutter.Text('booking.details.locationDenied'.tr()),
+          ),
+        );
+      }
+      return null;
+    }
+    try {
+      final pos =
+          await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.medium,
+              timeLimit: Duration(seconds: 15),
+            ),
+          ).timeout(
+            const Duration(seconds: 18),
+            onTimeout: () => throw TimeoutException('Location timeout'),
+          );
+      return Point(latitude: pos.latitude, longitude: pos.longitude);
+    } on TimeoutException {
+      debugPrint('Geolocator timeout');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: flutter.Text('booking.details.routeError'.tr())),
+        );
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Geolocator error: $e');
+      return null;
+    }
+  }
+
+  /// Открывает маршрут до места в Apple Картах (fallback при ошибке в приложении).
+  void _openInAppleMaps(Point destination) {
+    final url = Uri.parse(
+      'https://maps.apple.com/?daddr=${destination.latitude},${destination.longitude}&dirflg=d',
+    );
+    launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
+  /// Показывает SnackBar об ошибке маршрута с кнопкой «Открыть в Картах».
+  void _showRouteErrorSnackBar(Point destination) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: flutter.Text('booking.details.routeErrorWithFallback'.tr()),
+        duration: const Duration(seconds: 6),
+        action: SnackBarAction(
+          label: 'booking.details.openInMaps'.tr(),
+          onPressed: () => _openInAppleMaps(destination),
+        ),
+      ),
+    );
+  }
+
+  /// Строит маршрут от текущего местоположения до выбранного места и рисует его на карте Yandex MapKit.
+  /// При таймауте или ошибке предлагает открыть маршрут в Apple Картах.
+  Future<void> _buildRoute() async {
+    if (_selectedGrave == null) return;
+    final destination = _getGraveCenter(_selectedGrave!);
+    setState(() => _isBuildingRoute = true);
+    // Уменьшаем нижний блок, чтобы лучше видеть карту и маршрут
+    _sheetController.animateTo(
+      _sheetSizeRoute,
+      duration: const Duration(milliseconds: 300),
+      curve: flutter.Curves.easeOut,
+    );
+    try {
+      await Future(() async {
+        final current = await _getCurrentLocation();
+        if (current == null || !mounted) throw Exception('Location failed');
+
+        final (session, resultFuture) = await YandexDriving.requestRoutes(
+          points: [
+            RequestPoint(
+              point: current,
+              requestPointType: RequestPointType.wayPoint,
+            ),
+            RequestPoint(
+              point: destination,
+              requestPointType: RequestPointType.wayPoint,
+            ),
+          ],
+          drivingOptions: const DrivingOptions(
+            initialAzimuth: 0,
+            routesCount: 1,
+            avoidanceFlags: DrivingAvoidanceFlags(),
+          ),
+        );
+
+        final result = await resultFuture.timeout(
+          const Duration(seconds: 18),
+          onTimeout: () => throw TimeoutException('Route request timeout'),
+        );
+        await session.close();
+
+        if (!mounted) return;
+        if (result.error != null) throw Exception(result.error);
+        if (result.routes == null || result.routes!.isEmpty) {
+          throw Exception('No routes');
+        }
+
+        final route = result.routes!.first;
+        setState(() {
+          _routePolyline = PolylineMapObject(
+            mapId: const MapObjectId('route_polyline'),
+            polyline: route.geometry,
+            strokeColor: AppColors.buttonBackground,
+            strokeWidth: 5.0,
+          );
+        });
+
+        if (_mapController != null && route.geometry.points.isNotEmpty) {
+          final points = route.geometry.points;
+          double minLat = points.first.latitude, maxLat = minLat;
+          double minLon = points.first.longitude, maxLon = minLon;
+          for (final p in points) {
+            if (p.latitude < minLat) minLat = p.latitude;
+            if (p.latitude > maxLat) maxLat = p.latitude;
+            if (p.longitude < minLon) minLon = p.longitude;
+            if (p.longitude > maxLon) maxLon = p.longitude;
+          }
+          final centerLat = (minLat + maxLat) / 2;
+          final centerLon = (minLon + maxLon) / 2;
+          await _mapController!.moveCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: Point(latitude: centerLat, longitude: centerLon),
+                zoom: 14.0,
+              ),
+            ),
+          );
+        }
+      }).timeout(
+        const Duration(seconds: 25),
+        onTimeout: () => throw TimeoutException('Route timeout'),
+      );
+    } on TimeoutException catch (_) {
+      if (mounted) {
+        _showRouteErrorSnackBar(destination);
+      }
+    } catch (e) {
+      debugPrint('Route build error: $e');
+      if (mounted) {
+        _showRouteErrorSnackBar(destination);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBuildingRoute = false);
+      }
+    }
+  }
+
   flutter.Widget _buildSelectedGraveInfo() {
     if (_selectedGrave == null) return const flutter.SizedBox.shrink();
 
     final grave = _selectedGrave!;
 
     return flutter.Container(
-      margin: const flutter.EdgeInsets.only(bottom: 16),
-      padding: const flutter.EdgeInsets.all(16),
+      margin: const flutter.EdgeInsets.only(bottom: 10),
+      padding: const flutter.EdgeInsets.all(12),
       decoration: flutter.BoxDecoration(
         color: const flutter.Color.fromRGBO(244, 240, 231, 1),
-        borderRadius: flutter.BorderRadius.circular(12),
+        borderRadius: flutter.BorderRadius.circular(10),
         border: flutter.Border.all(color: AppColors.buttonBackground, width: 2),
       ),
       child: flutter.Column(
@@ -207,7 +424,7 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
               flutter.Text(
                 'booking.details.selectedPlace'.tr(),
                 style: flutter.TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: flutter.FontWeight.w600,
                   color: AppColors.iconAndText,
                 ),
@@ -216,6 +433,7 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
                 icon: const flutter.Icon(flutter.Icons.close, size: 20),
                 onPressed: () {
                   setState(() {
+                    _routePolyline = null;
                     // Сбрасываем выделение на карте
                     if (_selectedGrave != null &&
                         _gravePolygons.containsKey(_selectedGrave!.id)) {
@@ -238,7 +456,9 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
             children: [
               flutter.Expanded(
                 child: flutter.Text(
-                  'booking.details.sector'.tr(namedArgs: {'sector': grave.sectorNumber}),
+                  'booking.details.sector'.tr(
+                    namedArgs: {'sector': grave.sectorNumber},
+                  ),
                   style: const flutter.TextStyle(
                     fontSize: 14,
                     color: AppColors.iconAndText,
@@ -247,7 +467,9 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
               ),
               flutter.Expanded(
                 child: flutter.Text(
-                  'booking.details.place'.tr(namedArgs: {'place': grave.graveNumber}),
+                  'booking.details.place'.tr(
+                    namedArgs: {'place': grave.graveNumber},
+                  ),
                   style: const flutter.TextStyle(
                     fontSize: 14,
                     color: AppColors.iconAndText,
@@ -273,13 +495,44 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
               ),
               const flutter.SizedBox(width: 8),
               flutter.Text(
-                'booking.details.status'.tr(namedArgs: {'status': _getStatusText(grave.status)}),
+                'booking.details.status'.tr(
+                  namedArgs: {'status': _getStatusText(grave.status)},
+                ),
                 style: const flutter.TextStyle(
                   fontSize: 14,
                   color: AppColors.iconAndText,
                 ),
               ),
             ],
+          ),
+          const flutter.SizedBox(height: 12),
+          // Кнопка «Проложить маршрут»
+          flutter.SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: flutter.OutlinedButton.icon(
+              onPressed: _isBuildingRoute ? null : () => _buildRoute(),
+              icon: _isBuildingRoute
+                  ? const flutter.SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: flutter.CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const flutter.Icon(flutter.Icons.directions, size: 20),
+              label: flutter.Text(
+                _isBuildingRoute ? '...' : 'booking.details.buildRoute'.tr(),
+                style: const flutter.TextStyle(fontSize: 14),
+              ),
+              style: flutter.OutlinedButton.styleFrom(
+                foregroundColor: AppColors.buttonBackground,
+                side: const flutter.BorderSide(
+                  color: AppColors.buttonBackground,
+                ),
+                shape: flutter.RoundedRectangleBorder(
+                  borderRadius: flutter.BorderRadius.circular(8),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -343,8 +596,22 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
                   if (!_isLoadingGraves) {
                     _updateMapObjects();
                   }
+
+                  // Показываем иконку текущего местоположения пользователя на карте
+                  try {
+                    await _mapController!.toggleUserLayer(
+                      visible: true,
+                      headingEnabled: false,
+                      autoZoomEnabled: false,
+                    );
+                  } catch (e) {
+                    debugPrint('User location layer: $e');
+                  }
                 },
-                mapObjects: _gravePolygons.values.toList(),
+                mapObjects: [
+                  ..._gravePolygons.values,
+                  if (_routePolyline != null) _routePolyline!,
+                ],
               ),
 
             // Индикатор загрузки MapKit или могил
@@ -394,184 +661,246 @@ class _CemeteryDetailsModalState extends State<CemeteryDetailsModal> {
               ),
             ),
 
-            // Информация о кладбище (поверх карты внизу)
+            // Нижний лист: вытягивается от 28% до 70%, по умолчанию 65%; при «Проложить маршрут» — 40%
             flutter.Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: flutter.Container(
-                decoration: flutter.BoxDecoration(
-                  color: flutter.Colors.white,
-                  borderRadius: const flutter.BorderRadius.only(
-                    topLeft: flutter.Radius.circular(20),
-                    topRight: flutter.Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    flutter.BoxShadow(
-                      color: flutter.Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 20,
-                      offset: const flutter.Offset(0, -4),
+              top: 0,
+              child: flutter.DraggableScrollableSheet(
+                controller: _sheetController,
+                initialChildSize: _sheetSizeDefault,
+                minChildSize: 0.28,
+                maxChildSize: 0.70,
+                builder: (context, scrollController) => flutter.Container(
+                  decoration: flutter.BoxDecoration(
+                    color: flutter.Colors.white,
+                    borderRadius: const flutter.BorderRadius.only(
+                      topLeft: flutter.Radius.circular(16),
+                      topRight: flutter.Radius.circular(16),
                     ),
-                  ],
-                ),
-                child: flutter.SafeArea(
-                  top: false,
-                  child: flutter.SingleChildScrollView(
-                    padding: const flutter.EdgeInsets.all(20),
+                    boxShadow: [
+                      flutter.BoxShadow(
+                        color: flutter.Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 12,
+                        offset: const flutter.Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: flutter.SafeArea(
+                    top: false,
                     child: flutter.Column(
                       crossAxisAlignment: flutter.CrossAxisAlignment.start,
+                      mainAxisSize: flutter.MainAxisSize.min,
                       children: [
-                        // Название и иконка религии
-                        flutter.Row(
-                          children: [
-                            SvgPicture.asset(
-                              _getReligionIconPath(),
-                              width: 32,
-                              height: 32,
-                              colorFilter: const flutter.ColorFilter.mode(
-                                AppColors.iconAndText,
-                                flutter.BlendMode.srcIn,
-                              ),
-                              placeholderBuilder:
-                                  (flutter.BuildContext context) =>
-                                      flutter.Container(
-                                        width: 32,
-                                        height: 32,
-                                        color: flutter.Colors.transparent,
-                                      ),
+                        // Ручка для вытягивания листа
+                        flutter.Center(
+                          child: flutter.Container(
+                            margin: const flutter.EdgeInsets.only(
+                              top: 8,
+                              bottom: 4,
                             ),
-                            const flutter.SizedBox(width: 12),
-                            flutter.Expanded(
-                              child: flutter.Text(
-                                widget.cemetery.name,
-                                style: const flutter.TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: flutter.FontWeight.w700,
-                                  color: AppColors.iconAndText,
-                                ),
-                              ),
+                            width: 40,
+                            height: 4,
+                            decoration: flutter.BoxDecoration(
+                              color: flutter.Colors.grey.shade400,
+                              borderRadius: flutter.BorderRadius.circular(2),
                             ),
-                          ],
-                        ),
-                        const flutter.SizedBox(height: 16),
-                        // Легенда
-                        flutter.Row(
-                          children: [
-                            _buildLegendItem(
-                              color: flutter.Colors.green,
-                              label:
-                                  'booking.details.freePlaces'.tr(namedArgs: {'count': widget.cemetery.freeSpaces.toString()}),
-                            ),
-                            const flutter.SizedBox(width: 16),
-                            _buildLegendItem(
-                              color: flutter.Colors.orange,
-                              label:
-                                  'booking.details.reservedPlaces'.tr(namedArgs: {'count': widget.cemetery.reservedSpaces.toString()}),
-                            ),
-                          ],
-                        ),
-                        const flutter.SizedBox(height: 8),
-                        _buildLegendItem(
-                          color: flutter.Colors.grey,
-                          label: 'booking.details.occupiedPlaces'.tr(namedArgs: {'count': widget.cemetery.occupiedSpaces.toString()}),
-                        ),
-                        const flutter.SizedBox(height: 20),
-                        // Адрес
-                        flutter.Row(
-                          children: [
-                            const flutter.Icon(
-                              flutter.Icons.location_on,
-                              size: 20,
-                              color: AppColors.iconAndText,
-                            ),
-                            const flutter.SizedBox(width: 8),
-                            flutter.Expanded(
-                              child: flutter.Text(
-                                '${widget.cemetery.streetName}, ${widget.cemetery.city}',
-                                style: const flutter.TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.iconAndText,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const flutter.SizedBox(height: 12),
-                        // Телефон
-                        flutter.Row(
-                          children: [
-                            const flutter.Icon(
-                              flutter.Icons.phone,
-                              size: 20,
-                              color: AppColors.iconAndText,
-                            ),
-                            const flutter.SizedBox(width: 8),
-                            flutter.Text(
-                              '+${widget.cemetery.phone}',
-                              style: const flutter.TextStyle(
-                                fontSize: 14,
-                                color: AppColors.iconAndText,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const flutter.SizedBox(height: 20),
-                        // Описание
-                        flutter.Text(
-                          widget.cemetery.description,
-                          style: const flutter.TextStyle(
-                            fontSize: 14,
-                            color: AppColors.iconAndText,
-                            height: 1.5,
                           ),
                         ),
-                        const flutter.SizedBox(height: 24),
-                        // Информация о выбранном месте
-                        _buildSelectedGraveInfo(),
-                        // Кнопка бронирования
-                        flutter.SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: flutter.ElevatedButton(
-                            onPressed:
-                                _selectedGrave != null && _selectedGrave!.isFree
-                                ? () {
-                                    Navigator.pop(context);
-                                    Navigator.push(
-                                      context,
-                                      flutter.MaterialPageRoute(
-                                        builder: (context) => BookingPage(
-                                          cemetery: widget.cemetery,
-                                          grave: _selectedGrave!,
+                        flutter.Expanded(
+                          child: flutter.SingleChildScrollView(
+                            controller: scrollController,
+                            padding: const flutter.EdgeInsets.fromLTRB(
+                              14,
+                              4,
+                              14,
+                              12,
+                            ),
+                            child: flutter.Column(
+                              crossAxisAlignment:
+                                  flutter.CrossAxisAlignment.start,
+                              mainAxisSize: flutter.MainAxisSize.min,
+                              children: [
+                                // Название и иконка религии
+                                flutter.Row(
+                                  children: [
+                                    SvgPicture.asset(
+                                      _getReligionIconPath(),
+                                      width: 26,
+                                      height: 26,
+                                      colorFilter:
+                                          const flutter.ColorFilter.mode(
+                                            AppColors.iconAndText,
+                                            flutter.BlendMode.srcIn,
+                                          ),
+                                      placeholderBuilder:
+                                          (flutter.BuildContext context) =>
+                                              flutter.Container(
+                                                width: 26,
+                                                height: 26,
+                                                color:
+                                                    flutter.Colors.transparent,
+                                              ),
+                                    ),
+                                    const flutter.SizedBox(width: 8),
+                                    flutter.Expanded(
+                                      child: flutter.Text(
+                                        widget.cemetery.name,
+                                        style: const flutter.TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: flutter.FontWeight.w700,
+                                          color: AppColors.iconAndText,
                                         ),
                                       ),
-                                    );
-                                  }
-                                : null,
-                            style: flutter.ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.buttonBackground,
-                              disabledBackgroundColor: flutter.Colors.grey,
-                              shape: flutter.RoundedRectangleBorder(
-                                borderRadius: flutter.BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: flutter.Row(
-                              mainAxisAlignment:
-                                  flutter.MainAxisAlignment.center,
-                              children: [
-                                const flutter.Icon(
-                                  flutter.Icons.edit,
-                                  size: 20,
+                                    ),
+                                  ],
                                 ),
-                                const flutter.SizedBox(width: 8),
+                                const flutter.SizedBox(height: 10),
+                                // Легенда
+                                flutter.Row(
+                                  children: [
+                                    _buildLegendItem(
+                                      color: flutter.Colors.green,
+                                      label: 'booking.details.freePlaces'.tr(
+                                        namedArgs: {
+                                          'count': widget.cemetery.freeSpaces
+                                              .toString(),
+                                        },
+                                      ),
+                                    ),
+                                    const flutter.SizedBox(width: 10),
+                                    _buildLegendItem(
+                                      color: flutter.Colors.orange,
+                                      label: 'booking.details.reservedPlaces'
+                                          .tr(
+                                            namedArgs: {
+                                              'count': widget
+                                                  .cemetery
+                                                  .reservedSpaces
+                                                  .toString(),
+                                            },
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                const flutter.SizedBox(height: 8),
+                                _buildLegendItem(
+                                  color: flutter.Colors.grey,
+                                  label: 'booking.details.occupiedPlaces'.tr(
+                                    namedArgs: {
+                                      'count': widget.cemetery.occupiedSpaces
+                                          .toString(),
+                                    },
+                                  ),
+                                ),
+                                const flutter.SizedBox(height: 10),
+                                // Адрес
+                                flutter.Row(
+                                  children: [
+                                    const flutter.Icon(
+                                      flutter.Icons.location_on,
+                                      size: 18,
+                                      color: AppColors.iconAndText,
+                                    ),
+                                    const flutter.SizedBox(width: 8),
+                                    flutter.Expanded(
+                                      child: flutter.Text(
+                                        '${widget.cemetery.streetName}, ${widget.cemetery.city}',
+                                        style: const flutter.TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.iconAndText,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const flutter.SizedBox(height: 6),
+                                // Телефон
+                                flutter.Row(
+                                  children: [
+                                    const flutter.Icon(
+                                      flutter.Icons.phone,
+                                      size: 18,
+                                      color: AppColors.iconAndText,
+                                    ),
+                                    const flutter.SizedBox(width: 8),
+                                    flutter.Text(
+                                      '+${widget.cemetery.phone}',
+                                      style: const flutter.TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.iconAndText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const flutter.SizedBox(height: 8),
+                                // Описание
                                 flutter.Text(
-                                  _selectedGrave != null &&
-                                          _selectedGrave!.isFree
-                                      ? 'booking.details.bookPlace'.tr()
-                                      : 'booking.details.selectFreePlace'.tr(),
+                                  widget.cemetery.description,
                                   style: const flutter.TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: flutter.FontWeight.w600,
+                                    fontSize: 13,
+                                    color: AppColors.iconAndText,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const flutter.SizedBox(height: 12),
+                                // Информация о выбранном месте
+                                _buildSelectedGraveInfo(),
+                                // Кнопка бронирования
+                                flutter.SizedBox(
+                                  width: double.infinity,
+                                  height: 44,
+                                  child: flutter.ElevatedButton(
+                                    onPressed:
+                                        _selectedGrave != null &&
+                                            _selectedGrave!.isFree
+                                        ? () {
+                                            Navigator.pop(context);
+                                            Navigator.push(
+                                              context,
+                                              flutter.MaterialPageRoute(
+                                                builder: (context) =>
+                                                    BookingPage(
+                                                      cemetery: widget.cemetery,
+                                                      grave: _selectedGrave!,
+                                                    ),
+                                              ),
+                                            );
+                                          }
+                                        : null,
+                                    style: flutter.ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          AppColors.buttonBackground,
+                                      disabledBackgroundColor:
+                                          flutter.Colors.grey,
+                                      shape: flutter.RoundedRectangleBorder(
+                                        borderRadius:
+                                            flutter.BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: flutter.Row(
+                                      mainAxisAlignment:
+                                          flutter.MainAxisAlignment.center,
+                                      children: [
+                                        const flutter.Icon(
+                                          flutter.Icons.edit,
+                                          size: 20,
+                                        ),
+                                        const flutter.SizedBox(width: 8),
+                                        flutter.Text(
+                                          _selectedGrave != null &&
+                                                  _selectedGrave!.isFree
+                                              ? 'booking.details.bookPlace'.tr()
+                                              : 'booking.details.selectFreePlace'
+                                                    .tr(),
+                                          style: const flutter.TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: flutter.FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],

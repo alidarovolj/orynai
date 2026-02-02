@@ -390,7 +390,13 @@
       "selectFreePlace": "Бос орынды таңдаңыз",
       "loadingGraves": "Қабірлерді жүктеу қатесі: {error}",
       "mapInitializing": "Картаны баптау...",
-      "loadingPlaces": "Орындарды жүктеу..."
+      "loadingPlaces": "Орындарды жүктеу...",
+      "buildRoute": "Маршрут салу",
+      "routeError": "Маршрут құру мүмкін болмады",
+      "routeErrorWithFallback": "Қолданбада маршрут қол жетімсіз. Навигация үшін «Картада ашу» батырмасын басыңыз.",
+      "openInMaps": "Картада ашу",
+      "locationDisabled": "Геолокацияны параметрлерде қосыңыз",
+      "locationDenied": "Маршрут салу үшін орналасуға рұқсат беріңіз"
     },
     "success": {
       "requestSent": "Сұрау жіберілді",

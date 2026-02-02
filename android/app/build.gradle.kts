@@ -24,7 +24,8 @@ android {
         applicationId = "com.example.flutter_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // yandex_mapkit requires minSdk 26
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -44,5 +45,5 @@ flutter {
 }
 
 dependencies {
-    implementation("com.yandex.android:maps.mobile:4.8.0-lite")
+    implementation("com.yandex.android:maps.mobile:4.22.0-full")
 }
