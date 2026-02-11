@@ -204,50 +204,49 @@ class MenuModal extends StatelessWidget {
                           );
                         },
                       ),
-                      const SizedBox(height: AppSizes.paddingMedium),
-                      // Разделитель
-                      Divider(
-                        color: AppColors.accordionBorder,
-                        thickness: 1,
-                        height: 1,
-                      ),
-                      const SizedBox(height: AppSizes.paddingMedium),
-                      // Секция "СЕРІКТЕСТЕРГЕ"
-                      Text(
-                        'menu.forPartners'.tr(),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.accordionBorder,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.paddingSmall),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          Icons.business_outlined,
-                          color: AppColors.iconAndText,
-                        ),
-                        title: Text(
-                          'menu.loginAsProvider'.tr(),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.iconAndText,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          // TODO: Реализовать вход для партнеров
-                        },
-                      ),
                       const SizedBox(height: AppSizes.paddingLarge),
-                      // Разделитель
-                      Divider(
-                        color: AppColors.accordionBorder,
-                        thickness: 1,
-                        height: 1,
-                      ),
-                      const SizedBox(height: AppSizes.paddingLarge),
+                      // Закомментировано: блок "Войти как поставщик услуг"
+                      // const SizedBox(height: AppSizes.paddingMedium),
+                      // Divider(
+                      //   color: AppColors.accordionBorder,
+                      //   thickness: 1,
+                      //   height: 1,
+                      // ),
+                      // const SizedBox(height: AppSizes.paddingMedium),
+                      // Text(
+                      //   'menu.forPartners'.tr(),
+                      //   style: const TextStyle(
+                      //     fontSize: 12,
+                      //     color: AppColors.accordionBorder,
+                      //     fontWeight: FontWeight.w500,
+                      //   ),
+                      // ),
+                      // const SizedBox(height: AppSizes.paddingSmall),
+                      // ListTile(
+                      //   contentPadding: EdgeInsets.zero,
+                      //   leading: Icon(
+                      //     Icons.business_outlined,
+                      //     color: AppColors.iconAndText,
+                      //   ),
+                      //   title: Text(
+                      //     'menu.loginAsProvider'.tr(),
+                      //     style: const TextStyle(
+                      //       fontSize: 16,
+                      //       color: AppColors.iconAndText,
+                      //     ),
+                      //   ),
+                      //   onTap: () {
+                      //     Navigator.pop(context);
+                      //     // TODO: Реализовать вход для партнеров
+                      //   },
+                      // ),
+                      // const SizedBox(height: AppSizes.paddingLarge),
+                      // Divider(
+                      //   color: AppColors.accordionBorder,
+                      //   thickness: 1,
+                      //   height: 1,
+                      // ),
+                      // const SizedBox(height: AppSizes.paddingLarge),
                     ],
                   );
                 } else {

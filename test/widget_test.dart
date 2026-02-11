@@ -16,10 +16,10 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       EasyLocalization(
-        supportedLocales: const [Locale('kk'), Locale('ru')],
+        supportedLocales: const [Locale('ru'), Locale('kk')],
         path: 'assets/translations',
-        fallbackLocale: const Locale('kk'),
-        startLocale: const Locale('kk'),
+        fallbackLocale: const Locale('ru'),
+        startLocale: const Locale('ru'),
         child: const MyApp(),
       ),
     );

@@ -22,14 +22,16 @@ class Order {
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
+    final itemsRaw = json['items'];
+    final itemsList = itemsRaw is List
+        ? (itemsRaw).map((item) => OrderItem.fromJson(item as Map<String, dynamic>)).toList()
+        : <OrderItem>[];
     return Order(
       id: json['id'] as int,
       userPhone: json['user_phone'] as String,
       status: json['status'] as String,
       totalPrice: json['total_price'] as int,
-      items: (json['items'] as List)
-          .map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
-          .toList(),
+      items: itemsList,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
       userInfo: UserInfo.fromJson(json['user_info'] as Map<String, dynamic>),

@@ -15,6 +15,7 @@ import 'create_memorial_page.dart';
 import 'create_appeal_page.dart';
 import 'create_reburial_request_page.dart';
 import 'memorial_detail_page.dart';
+import '../widgets/burial_request_select_modal.dart';
 import '../models/appeal.dart';
 import '../models/reburial_request_item.dart';
 import '../models/memorial.dart';
@@ -206,23 +207,49 @@ class _ProfilePageState extends State<ProfilePage>
 
   Widget _buildPersonalDataTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSizes.paddingMedium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDataRow(
-            label: 'profile.fullName'.tr(),
-            value: _fullName ?? 'profile.emptyValue'.tr(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSizes.paddingMedium,
+              AppSizes.paddingMedium,
+              AppSizes.paddingMedium,
+              AppSizes.paddingSmall,
+            ),
+            child: Text(
+              'profile.personalDataTitle'.tr(),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1d1c1a),
+                fontFamily: 'Manrope',
+              ),
+            ),
           ),
-          const SizedBox(height: AppSizes.paddingLarge),
-          _buildDataRow(
-            label: 'profile.iin'.tr(),
-            value: _iin ?? 'profile.emptyValue'.tr(),
-          ),
-          const SizedBox(height: AppSizes.paddingLarge),
-          _buildDataRow(
-            label: 'profile.phone'.tr(),
-            value: _formatPhone(_phone),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.paddingMedium,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDataRow(
+                  label: 'profile.fullName'.tr(),
+                  value: _fullName ?? 'profile.emptyValue'.tr(),
+                ),
+                const SizedBox(height: AppSizes.paddingLarge),
+                _buildDataRow(
+                  label: 'profile.iin'.tr(),
+                  value: _iin ?? 'profile.emptyValue'.tr(),
+                ),
+                const SizedBox(height: AppSizes.paddingLarge),
+                _buildDataRow(
+                  label: 'profile.phone'.tr(),
+                  value: _formatPhone(_phone),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -369,7 +396,7 @@ class _ProfilePageState extends State<ProfilePage>
             return Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                '${item.product?.name ?? 'profile.product'.tr()} x${item.quantity}',
+                '${item.product.name ?? 'profile.product'.tr()} x${item.quantity}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -405,13 +432,11 @@ class _ProfilePageState extends State<ProfilePage>
     }
 
     String reservationExpires = '';
-    if (request.reservationExpiresAt != null) {
-      try {
-        final date = DateTime.parse(request.reservationExpiresAt!);
-        reservationExpires = dateFormat.format(date);
-      } catch (e) {
-        reservationExpires = request.reservationExpiresAt!;
-      }
+    try {
+      final date = DateTime.parse(request.reservationExpiresAt!);
+      reservationExpires = dateFormat.format(date);
+    } catch (e) {
+      reservationExpires = request.reservationExpiresAt!;
     }
 
     return Container(
@@ -477,7 +502,7 @@ class _ProfilePageState extends State<ProfilePage>
           _buildInfoRow('profile.row'.tr(), request.rowNumber),
           const SizedBox(height: AppSizes.paddingSmall),
           _buildInfoRow('profile.place'.tr(), request.graveNumber),
-          if (request.deceased != null) ...[
+          ...[
             const SizedBox(height: AppSizes.paddingSmall),
             _buildInfoRow('profile.deceased'.tr(), request.deceased!.fullName),
           ],
@@ -606,33 +631,53 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_orders.isEmpty) {
-      return Center(
-        child: Text(
-          'profile.noOrders'.tr(),
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.accordionBorder,
-            fontFamily: 'Manrope',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingSmall,
+          ),
+          child: Text(
+            'profile.ordersTitle'.tr(),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
           ),
         ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadOrders,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        itemCount: _orders.length,
-        itemBuilder: (context, index) {
-          final order = _orders[index];
-          return _buildOrderCard(order);
-        },
-      ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _orders.isEmpty
+              ? Center(
+                  child: Text(
+                    'profile.noOrders'.tr(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.accordionBorder,
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadOrders,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                    itemCount: _orders.length,
+                    itemBuilder: (context, index) {
+                      final order = _orders[index];
+                      return _buildOrderCard(order);
+                    },
+                  ),
+                ),
+        ),
+      ],
     );
   }
 
@@ -725,7 +770,7 @@ class _OrdersListWidgetState extends State<OrdersListWidget> {
             return Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                '${item.product?.name ?? 'profile.product'.tr()} x${item.quantity}',
+                '${item.product.name ?? 'profile.product'.tr()} x${item.quantity}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -814,33 +859,53 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_requests.isEmpty) {
-      return Center(
-        child: Text(
-          'profile.noBurialRequests'.tr(),
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.accordionBorder,
-            fontFamily: 'Manrope',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingSmall,
+          ),
+          child: Text(
+            'profile.burialRequestsTitle'.tr(),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1d1c1a),
+              fontFamily: 'Manrope',
+            ),
           ),
         ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadRequests,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        itemCount: _requests.length,
-        itemBuilder: (context, index) {
-          final request = _requests[index];
-          return _buildRequestCard(request);
-        },
-      ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _requests.isEmpty
+              ? Center(
+                  child: Text(
+                    'profile.noBurialRequests'.tr(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.accordionBorder,
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadRequests,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                    itemCount: _requests.length,
+                    itemBuilder: (context, index) {
+                      final request = _requests[index];
+                      return _buildRequestCard(request);
+                    },
+                  ),
+                ),
+        ),
+      ],
     );
   }
 
@@ -855,13 +920,11 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
     }
 
     String reservationExpires = '';
-    if (request.reservationExpiresAt != null) {
-      try {
-        final date = DateTime.parse(request.reservationExpiresAt!);
-        reservationExpires = dateFormat.format(date);
-      } catch (e) {
-        reservationExpires = request.reservationExpiresAt!;
-      }
+    try {
+      final date = DateTime.parse(request.reservationExpiresAt!);
+      reservationExpires = dateFormat.format(date);
+    } catch (e) {
+      reservationExpires = request.reservationExpiresAt!;
     }
 
     return Container(
@@ -927,7 +990,7 @@ class _BurialRequestsListWidgetState extends State<BurialRequestsListWidget> {
           _buildInfoRow('profile.row'.tr(), request.rowNumber),
           const SizedBox(height: AppSizes.paddingSmall),
           _buildInfoRow('profile.place'.tr(), request.graveNumber),
-          if (request.deceased != null) ...[
+          ...[
             const SizedBox(height: AppSizes.paddingSmall),
             _buildInfoRow('profile.deceased'.tr(), request.deceased!.fullName),
           ],
@@ -1473,7 +1536,13 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.errors.loadAppeals'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: Text(
+              'profile.errors.loadAppeals'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
         );
       }
     }
@@ -1499,39 +1568,38 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
             AppSizes.paddingMedium,
             AppSizes.paddingSmall,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  'profile.akimatAppealsTitle'.tr(),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1d1c1a),
-                    fontFamily: 'Manrope',
-                  ),
+              Text(
+                'profile.akimatAppealsTitle'.tr(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1d1c1a),
+                  fontFamily: 'Manrope',
                 ),
               ),
-              ElevatedButton(
-                onPressed: _openCreateAppeal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonBackground,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.paddingMedium,
-                    vertical: 12,
+              const SizedBox(height: AppSizes.paddingMedium),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _openCreateAppeal,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonBackground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'profile.createAppeal'.tr(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    fontFamily: 'Manrope',
+                  child: Text(
+                    'profile.createAppeal'.tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      fontFamily: 'Manrope',
+                    ),
                   ),
                 ),
               ),
@@ -1653,7 +1721,10 @@ class _AkimatAppealsWidgetState extends State<AkimatAppealsWidget> {
                 ],
               ),
               const SizedBox(height: AppSizes.paddingSmall),
-              _row('profile.appealContentLabel'.tr(), a.content.isEmpty ? 'profile.emptyValue'.tr() : a.content),
+              _row(
+                'profile.appealContentLabel'.tr(),
+                a.content.isEmpty ? 'profile.emptyValue'.tr() : a.content,
+              ),
             ],
           ),
         ),
@@ -1728,7 +1799,13 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile.errors.loadMemorials'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: Text(
+              'profile.errors.loadMemorials'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
         );
       }
     }
@@ -1745,28 +1822,95 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_memorials.isEmpty) {
-      return Center(
-        child: Text(
-          'profile.noMemorials'.tr(),
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppColors.accordionBorder,
-            fontFamily: 'Manrope',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingMedium,
+            AppSizes.paddingSmall,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'profile.memorialsTitle'.tr(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1d1c1a),
+                  fontFamily: 'Manrope',
+                ),
+              ),
+              const SizedBox(height: AppSizes.paddingMedium),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final request = await showModalBottomSheet<BurialRequest>(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (context) => const BurialRequestSelectModal(),
+                    );
+                    if (!mounted || request == null) return;
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            CreateMemorialPage(burialRequestId: request.id),
+                      ),
+                    );
+                    if (mounted) _loadMemorials();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonBackground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'profile.createMemorial'.tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      );
-    }
-    return RefreshIndicator(
-      onRefresh: _loadMemorials,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        itemCount: _memorials.length,
-        itemBuilder: (context, index) => _buildMemorialCard(_memorials[index]),
-      ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _memorials.isEmpty
+              ? Center(
+                  child: Text(
+                    'profile.noMemorials'.tr(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.accordionBorder,
+                      fontFamily: 'Manrope',
+                    ),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadMemorials,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                    itemCount: _memorials.length,
+                    itemBuilder: (context, index) =>
+                        _buildMemorialCard(_memorials[index]),
+                  ),
+                ),
+        ),
+      ],
     );
   }
 
@@ -1790,9 +1934,9 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
         if (!mounted) return;
         _loadMemorials();
         if (updated == true) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('profile.memorialUpdated'.tr())));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('profile.memorialUpdated'.tr())),
+          );
         }
       },
       borderRadius: BorderRadius.circular(12),
@@ -1883,7 +2027,9 @@ class _MemorialsListWidgetState extends State<MemorialsListWidget> {
                   ],
                   const SizedBox(height: AppSizes.paddingSmall),
                   Text(
-                    'profile.createdDate'.tr(namedArgs: {'date': _formatDate(m.createdAt)}),
+                    'profile.createdDate'.tr(
+                      namedArgs: {'date': _formatDate(m.createdAt)},
+                    ),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -1912,7 +2058,8 @@ class ReburialRequestsListWidget extends StatefulWidget {
       _ReburialRequestsListWidgetState();
 }
 
-class _ReburialRequestsListWidgetState extends State<ReburialRequestsListWidget> {
+class _ReburialRequestsListWidgetState
+    extends State<ReburialRequestsListWidget> {
   List<ReburialRequestItem> _requests = [];
   bool _isLoading = true;
 
@@ -1992,7 +2139,9 @@ class _ReburialRequestsListWidgetState extends State<ReburialRequestsListWidget>
 
   Widget _buildRequestCard(ReburialRequestItem r) {
     final idStr = r.id.toString().padLeft(5, '0');
-    final statusName = r.status.nameRu.isNotEmpty ? r.status.nameRu : r.status.value;
+    final statusName = r.status.nameRu.isNotEmpty
+        ? r.status.nameRu
+        : r.status.value;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2068,7 +2217,10 @@ class _ReburialRequestsListWidgetState extends State<ReburialRequestsListWidget>
                 ],
               ),
               const SizedBox(height: AppSizes.paddingSmall),
-              _row('profile.reason'.tr(), r.reason.isEmpty ? 'profile.emptyValue'.tr() : r.reason),
+              _row(
+                'profile.reason'.tr(),
+                r.reason.isEmpty ? 'profile.emptyValue'.tr() : r.reason,
+              ),
               if (r.user != null && r.user!.fio.isNotEmpty) ...[
                 const SizedBox(height: AppSizes.paddingSmall),
                 _row('profile.applicant'.tr(), r.user!.fio),
@@ -2093,39 +2245,38 @@ class _ReburialRequestsListWidgetState extends State<ReburialRequestsListWidget>
             AppSizes.paddingMedium,
             AppSizes.paddingSmall,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  'profile.reburialRequestsTitle'.tr(),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1d1c1a),
-                    fontFamily: 'Manrope',
-                  ),
+              Text(
+                'profile.reburialRequestsTitle'.tr(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1d1c1a),
+                  fontFamily: 'Manrope',
                 ),
               ),
-              ElevatedButton(
-                onPressed: _openCreatePage,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonBackground,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.paddingMedium,
-                    vertical: 12,
+              const SizedBox(height: AppSizes.paddingMedium),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _openCreatePage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonBackground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'profile.createReburialRequest'.tr(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    fontFamily: 'Manrope',
+                  child: Text(
+                    'profile.createReburialRequest'.tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      fontFamily: 'Manrope',
+                    ),
                   ),
                 ),
               ),
@@ -2136,30 +2287,30 @@ class _ReburialRequestsListWidgetState extends State<ReburialRequestsListWidget>
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _requests.isEmpty
-                  ? Center(
-                      child: Text(
-                        'profile.noReburialRequests'.tr(),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppColors.accordionBorder,
-                          fontFamily: 'Manrope',
-                        ),
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadRequests,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(
-                          left: AppSizes.paddingMedium,
-                          right: AppSizes.paddingMedium,
-                          bottom: AppSizes.paddingMedium,
-                        ),
-                        itemCount: _requests.length,
-                        itemBuilder: (context, index) {
-                          return _buildRequestCard(_requests[index]);
-                        },
-                      ),
+              ? Center(
+                  child: Text(
+                    'profile.noReburialRequests'.tr(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.accordionBorder,
+                      fontFamily: 'Manrope',
                     ),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadRequests,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(
+                      left: AppSizes.paddingMedium,
+                      right: AppSizes.paddingMedium,
+                      bottom: AppSizes.paddingMedium,
+                    ),
+                    itemCount: _requests.length,
+                    itemBuilder: (context, index) {
+                      return _buildRequestCard(_requests[index]);
+                    },
+                  ),
+                ),
         ),
       ],
     );

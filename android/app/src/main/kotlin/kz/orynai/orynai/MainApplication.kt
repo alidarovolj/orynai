@@ -1,4 +1,4 @@
-package com.example.flutter_app
+package kz.orynai.orynai
 
 import android.app.Application
 import com.yandex.mapkit.MapKitFactory

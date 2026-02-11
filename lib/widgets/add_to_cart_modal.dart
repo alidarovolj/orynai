@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as DatePicker;
@@ -361,7 +360,11 @@ class _AddToCartModalState extends State<AddToCartModal> {
           Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('catalog.addToCart.successMessage'.tr(namedArgs: {'id': cartId.toString()})),
+              content: Text(
+                'catalog.addToCart.successMessage'.tr(
+                  namedArgs: {'id': cartId.toString()},
+                ),
+              ),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
             ),
@@ -379,11 +382,15 @@ class _AddToCartModalState extends State<AddToCartModal> {
       String errorMessage = 'catalog.addToCart.errorAdd'.tr();
 
       if (e is ApiException) {
-        errorMessage = 'catalog.addToCart.errorAddDetail'.tr(namedArgs: {'message': e.message});
+        errorMessage = 'catalog.addToCart.errorAddDetail'.tr(
+          namedArgs: {'message': e.message},
+        );
         debugPrint('   Status Code: ${e.statusCode}');
         debugPrint('   Body: ${e.body}');
       } else {
-        errorMessage = 'catalog.addToCart.errorAddDetail'.tr(namedArgs: {'message': e.toString()});
+        errorMessage = 'catalog.addToCart.errorAddDetail'.tr(
+          namedArgs: {'message': e.toString()},
+        );
       }
 
       if (mounted) {
@@ -498,7 +505,10 @@ class _AddToCartModalState extends State<AddToCartModal> {
                 TextButton(
                   onPressed: _useSavedAddress,
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),

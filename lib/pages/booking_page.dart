@@ -17,11 +17,7 @@ class BookingPage extends StatefulWidget {
   final Cemetery cemetery;
   final Grave grave;
 
-  const BookingPage({
-    super.key,
-    required this.cemetery,
-    required this.grave,
-  });
+  const BookingPage({super.key, required this.cemetery, required this.grave});
 
   @override
   State<BookingPage> createState() => _BookingPageState();
@@ -69,7 +65,7 @@ class _BookingPageState extends State<BookingPage> {
 
   void _onIinChanged() {
     final iin = _iinController.text.replaceAll(RegExp(r'[^\d]'), '');
-    
+
     // Отправляем запрос когда ИИН содержит 12 символов
     if (iin.length == 12 && iin != _lastSearchedIin) {
       _lastSearchedIin = iin;
@@ -84,35 +80,37 @@ class _BookingPageState extends State<BookingPage> {
 
     try {
       final response = await _apiService.searchDeceasedByIin(iin);
-      
+
       debugPrint('Deceased search response: $response');
-      
+
       // Проверяем, найдены ли данные
-      if (response['code'] == null || response['code'] == 'FDTH_PERSON_NOT_FOUND') {
+      if (response['code'] == null ||
+          response['code'] == 'FDTH_PERSON_NOT_FOUND') {
         // Данные не найдены, оставляем поле ФИО пустым
         debugPrint('Deceased not found for IIN: $iin');
-      } else if (response['code'] == 'FDTH_COMPLETED' && response['data'] != null) {
+      } else if (response['code'] == 'FDTH_COMPLETED' &&
+          response['data'] != null) {
         // Данные найдены, извлекаем из структуры data.actRecords.record[0].person
         final data = response['data'] as Map<String, dynamic>;
         final actRecords = data['actRecords'] as Map<String, dynamic>?;
-        
+
         if (actRecords != null && actRecords['record'] != null) {
           final records = actRecords['record'] as List;
           if (records.isNotEmpty) {
             final record = records[0] as Map<String, dynamic>;
             final person = record['person'] as Map<String, dynamic>?;
-            
+
             if (person != null) {
               // Извлекаем ФИО из person
               final surname = person['surname']?.toString() ?? '';
               final name = person['name']?.toString() ?? '';
               final secondname = person['secondname']?.toString() ?? '';
-              
+
               final fullNameParts = <String>[];
               if (surname.isNotEmpty) fullNameParts.add(surname);
               if (name.isNotEmpty) fullNameParts.add(name);
               if (secondname.isNotEmpty) fullNameParts.add(secondname);
-              
+
               if (fullNameParts.isNotEmpty) {
                 setState(() {
                   _fullNameController.text = fullNameParts.join(' ');
@@ -227,15 +225,15 @@ class _BookingPageState extends State<BookingPage> {
       debugPrint('Error picking file: $e');
       if (mounted) {
         String errorMessage = 'profile.errors.filePick'.tr();
-        
+
         // Более понятное сообщение для разных типов ошибок
-        if (e.toString().contains('channel-error') || 
+        if (e.toString().contains('channel-error') ||
             e.toString().contains('Unable to establish connection')) {
           errorMessage = 'profile.errors.galleryOpen'.tr();
         } else if (e.toString().contains('permission')) {
           errorMessage = 'profile.errors.galleryPermission'.tr();
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -263,9 +261,7 @@ class _BookingPageState extends State<BookingPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.accordionBorder.withOpacity(0.3),
-          ),
+          border: Border.all(color: AppColors.accordionBorder.withOpacity(0.3)),
         ),
         child: Row(
           children: [
@@ -325,11 +321,7 @@ class _BookingPageState extends State<BookingPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.upload_file,
-                color: AppColors.iconAndText,
-                size: 24,
-              ),
+              Icon(Icons.upload_file, color: AppColors.iconAndText, size: 24),
               const SizedBox(width: AppSizes.paddingSmall),
               Text(
                 'booking.uploadFile'.tr(),
@@ -369,9 +361,7 @@ class _BookingPageState extends State<BookingPage> {
             child: Column(
               children: [
                 // Хэдер
-                AppHeader(
-                  isScrolled: _isScrolled,
-                ),
+                AppHeader(isScrolled: _isScrolled),
                 // Основной контент
                 Expanded(
                   child: SingleChildScrollView(
@@ -394,7 +384,9 @@ class _BookingPageState extends State<BookingPage> {
                           const SizedBox(height: AppSizes.paddingLarge),
                           // Карточка с информацией о месте
                           Container(
-                            padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                            padding: const EdgeInsets.all(
+                              AppSizes.paddingMedium,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.background,
                               borderRadius: BorderRadius.circular(12),
@@ -416,11 +408,12 @@ class _BookingPageState extends State<BookingPage> {
                                           AppColors.iconAndText,
                                           BlendMode.srcIn,
                                         ),
-                                        placeholderBuilder: (BuildContext context) => Container(
-                                          width: 24,
-                                          height: 24,
-                                          color: Colors.transparent,
-                                        ),
+                                        placeholderBuilder:
+                                            (BuildContext context) => Container(
+                                              width: 24,
+                                              height: 24,
+                                              color: Colors.transparent,
+                                            ),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -489,7 +482,9 @@ class _BookingPageState extends State<BookingPage> {
                                         fontFamily: 'Manrope',
                                       ),
                                     ),
-                                    const SizedBox(width: AppSizes.paddingMedium),
+                                    const SizedBox(
+                                      width: AppSizes.paddingMedium,
+                                    ),
                                     Text(
                                       'booking.place'.tr(),
                                       style: TextStyle(
@@ -602,19 +597,25 @@ class _BookingPageState extends State<BookingPage> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: AppColors.accordionBorder.withOpacity(0.3),
+                                  color: AppColors.accordionBorder.withOpacity(
+                                    0.3,
+                                  ),
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: AppColors.accordionBorder.withOpacity(0.3),
+                                  color: AppColors.accordionBorder.withOpacity(
+                                    0.3,
+                                  ),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: AppColors.accordionBorder.withOpacity(0.3),
+                                  color: AppColors.accordionBorder.withOpacity(
+                                    0.3,
+                                  ),
                                 ),
                               ),
                             ),
@@ -640,13 +641,17 @@ class _BookingPageState extends State<BookingPage> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: AppColors.accordionBorder.withOpacity(0.3),
+                                  color: AppColors.accordionBorder.withOpacity(
+                                    0.3,
+                                  ),
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: AppColors.accordionBorder.withOpacity(0.3),
+                                  color: AppColors.accordionBorder.withOpacity(
+                                    0.3,
+                                  ),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
@@ -658,7 +663,9 @@ class _BookingPageState extends State<BookingPage> {
                               disabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: AppColors.accordionBorder.withOpacity(0.3),
+                                  color: AppColors.accordionBorder.withOpacity(
+                                    0.3,
+                                  ),
                                 ),
                               ),
                             ),
@@ -689,7 +696,7 @@ class _BookingPageState extends State<BookingPage> {
                                     _datesEnabled = value;
                                   });
                                 },
-                                activeColor: AppColors.buttonBackground,
+                                activeThumbColor: AppColors.buttonBackground,
                               ),
                             ],
                           ),
@@ -728,19 +735,22 @@ class _BookingPageState extends State<BookingPage> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                   disabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                 ),
@@ -797,19 +807,22 @@ class _BookingPageState extends State<BookingPage> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                   disabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                 ),
@@ -853,19 +866,22 @@ class _BookingPageState extends State<BookingPage> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                   disabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: AppColors.accordionBorder.withOpacity(0.3),
+                                      color: AppColors.accordionBorder
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                 ),
@@ -908,9 +924,9 @@ class _BookingPageState extends State<BookingPage> {
     final fullName = _fullNameController.text.trim();
 
     if (iin.isEmpty || iin.length != 12) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('booking.errors.invalidIin'.tr())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('booking.errors.invalidIin'.tr())));
       return;
     }
 
@@ -939,7 +955,7 @@ class _BookingPageState extends State<BookingPage> {
       debugPrint('Error creating burial request: $e');
       if (mounted) {
         String errorMessage = 'booking.errors.bookingError'.tr();
-        
+
         // Извлекаем понятное сообщение об ошибке
         if (e is ApiException) {
           errorMessage = e.message;
@@ -948,9 +964,11 @@ class _BookingPageState extends State<BookingPage> {
             errorMessage = e.body!['message'].toString();
           }
         } else {
-          errorMessage = 'booking.errors.bookingErrorWithDetails'.tr(namedArgs: {'error': e.toString()});
+          errorMessage = 'booking.errors.bookingErrorWithDetails'.tr(
+            namedArgs: {'error': e.toString()},
+          );
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),

@@ -8,6 +8,7 @@ import 'auth_state_manager.dart';
 import '../models/appeal.dart';
 import '../models/deceased.dart';
 import '../models/memorial.dart';
+import '../models/memorial_search_result.dart';
 import '../models/reburial_request_item.dart';
 
 class ApiService {
@@ -1248,6 +1249,96 @@ class ApiService {
     }
   }
 
+  /// Поиск мемориалов. GET /api/v1/memorials/search
+  Future<({List<MemorialSearchResult> items, int total})> searchMemorials({
+    required String fullName,
+    DateTime? birthDateFrom,
+    DateTime? deathDateFrom,
+    int? cemeteryId,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final query = <String, String>{
+        'full_name': fullName,
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+      if (birthDateFrom != null) {
+        final iso = birthDateFrom.toUtc().toIso8601String();
+        query['birth_date_from'] = iso.contains('.') ? '${iso.split('.').first}Z' : iso;
+      }
+      if (deathDateFrom != null) {
+        final iso = deathDateFrom.toUtc().toIso8601String();
+        query['death_date_from'] = iso.contains('.') ? '${iso.split('.').first}Z' : iso;
+      }
+      if (cemeteryId != null) {
+        query['cemetery_id'] = cemeteryId.toString();
+      }
+      final raw = await get(
+        '/api/v1/memorials/search',
+        queryParameters: query,
+        requiresAuth: false,
+      );
+      List<MemorialSearchResult> items = [];
+      int total = 0;
+      if (raw is Map<String, dynamic>) {
+        final list = raw['content'] ?? raw['data'] ?? raw['items'] ?? raw['results'];
+        if (list is List) {
+          items = list
+              .map((e) => MemorialSearchResult.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+        total = (raw['total'] as num?)?.toInt() ?? items.length;
+      } else if (raw is List) {
+        items = raw
+            .map((e) => MemorialSearchResult.fromJson(e as Map<String, dynamic>))
+            .toList();
+        total = items.length;
+      }
+      return (items: items, total: total);
+    } catch (e) {
+      debugPrint('Error searching memorials: $e');
+      rethrow;
+    }
+  }
+
+  /// Отправка заявки на поиск захоронения. POST /api/v9/search-requests
+  Future<void> submitSearchRequest({
+    required String applicantName,
+    required String applicantPhone,
+    required String applicantEmail,
+    required String deceasedSurname,
+    required String deceasedName,
+    required String deceasedPatronym,
+    required DateTime? birthDate,
+    required DateTime? deathDate,
+    String? additionalInfo,
+  }) async {
+    final phoneDigits = applicantPhone.replaceAll(RegExp(r'[^\d]'), '');
+    final body = <String, dynamic>{
+      'applicant_name': applicantName,
+      'applicant_phone': phoneDigits,
+      'applicant_email': applicantEmail,
+      'deceased_surname': deceasedSurname,
+      'deceased_name': deceasedName,
+      'deceased_patronym': deceasedPatronym,
+      'additional_info': additionalInfo ?? '',
+      'request_type': 'search',
+    };
+    if (birthDate != null) {
+      body['birth_date'] = birthDate.toUtc().toIso8601String();
+    }
+    if (deathDate != null) {
+      body['death_date'] = deathDate.toUtc().toIso8601String();
+    }
+    await post(
+      '/api/v9/search-requests',
+      body: body,
+      requiresAuth: false,
+    );
+  }
+
   /// Один мемориал по id. GET /api/v1/memorials/{id}
   Future<Memorial> getMemorial(int id) async {
     try {
@@ -1290,7 +1381,11 @@ class ApiService {
         '/api/v1/memorials',
         requiresAuth: true,
       );
-      final list = raw is List ? raw : (raw as Map)['content'] as List? ?? [];
+      if (raw == null) return [];
+      final list = raw is List
+          ? raw
+          : (raw is Map ? (raw['content'] ?? raw['data'] ?? raw['items']) : null);
+      if (list == null || list is! List) return [];
       return list
           .map<Memorial>((e) => Memorial.fromJson(e as Map<String, dynamic>))
           .toList();

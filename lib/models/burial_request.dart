@@ -47,27 +47,27 @@ class BurialRequest {
 
   factory BurialRequest.fromJson(Map<String, dynamic> json) {
     return BurialRequest(
-      id: json['id'] as int,
-      requestNumber: json['request_number'] as String,
-      cemeteryId: json['cemetery_id'] as int,
-      cemeteryName: json['cemetery_name'] as String,
-      burialPrice: json['burial_price'] as int,
-      graveId: json['grave_id'] as int,
-      sectorNumber: json['sector_number'] as String,
-      rowNumber: json['row_number'] as String,
-      graveNumber: json['grave_number'] as String,
-      deceasedId: json['deceased_id'] as int,
+      id: (json['id'] as num).toInt(),
+      requestNumber: (json['request_number'] as String?) ?? '',
+      cemeteryId: (json['cemetery_id'] as num?)?.toInt() ?? 0,
+      cemeteryName: (json['cemetery_name'] as String?) ?? '',
+      burialPrice: (json['burial_price'] as num?)?.toInt() ?? 0,
+      graveId: (json['grave_id'] as num?)?.toInt() ?? 0,
+      sectorNumber: (json['sector_number'] as String?) ?? '',
+      rowNumber: (json['row_number'] as String?) ?? '',
+      graveNumber: (json['grave_number'] as String?) ?? '',
+      deceasedId: (json['deceased_id'] as num?)?.toInt() ?? 0,
       deceased: Deceased.fromJson(json['deceased'] as Map<String, dynamic>),
       burialDate: json['burial_date']?.toString(),
-      burialTime: json['burial_time'] as String? ?? '',
-      userPhone: json['user_phone'] as String,
-      status: json['status'] as String,
-      reservationExpiresAt: json['reservation_expires_at'] as String,
-      isComplete: json['is_complete'] as bool,
-      reservationType: json['reservation_type'] as String,
-      adjacentGravesCount: json['adjacent_graves_count'] as int,
-      createdAt: json['created_at'] as String,
-      updatedAt: json['updated_at'] as String,
+      burialTime: (json['burial_time'] as String?) ?? '',
+      userPhone: (json['user_phone'] as String?) ?? '',
+      status: (json['status'] as String?) ?? '',
+      reservationExpiresAt: (json['reservation_expires_at'] as String?) ?? '',
+      isComplete: json['is_complete'] as bool? ?? false,
+      reservationType: (json['reservation_type'] as String?) ?? 'single',
+      adjacentGravesCount: (json['adjacent_graves_count'] as num?)?.toInt() ?? 0,
+      createdAt: (json['created_at'] as String?) ?? '',
+      updatedAt: (json['updated_at'] as String?) ?? '',
     );
   }
 
@@ -138,15 +138,15 @@ class Deceased {
 
   factory Deceased.fromJson(Map<String, dynamic> json) {
     return Deceased(
-      id: json['id'] as int,
-      graveId: json['grave_id'] as int,
-      fullName: json['full_name'] as String,
-      inn: json['inn'] as String,
+      id: (json['id'] as num).toInt(),
+      graveId: (json['grave_id'] as num?)?.toInt() ?? 0,
+      fullName: (json['full_name'] as String?) ?? '',
+      inn: (json['inn'] as String?) ?? '',
       deathDate: json['death_date']?.toString(),
-      deathCertUrl: json['death_cert_url'] as String? ?? '',
-      isReburial: json['is_reburial'] as bool,
-      createdAt: json['created_at'] as String,
-      updatedAt: json['updated_at'] as String,
+      deathCertUrl: (json['death_cert_url'] as String?) ?? '',
+      isReburial: json['is_reburial'] as bool? ?? false,
+      createdAt: (json['created_at'] as String?) ?? '',
+      updatedAt: (json['updated_at'] as String?) ?? '',
     );
   }
 
@@ -181,15 +181,29 @@ class BurialRequestsResponse {
   });
 
   factory BurialRequestsResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] as Map<String, dynamic>;
+    final data = json['data'];
+    if (data is! Map<String, dynamic>) {
+      return BurialRequestsResponse(
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 50,
+        totalPages: 0,
+      );
+    }
+    final dataMap = data;
+    final dataList = dataMap['data'];
+    final List<BurialRequest> itemsList = dataList is! List
+        ? []
+        : dataList
+            .map((e) => BurialRequest.fromJson(e as Map<String, dynamic>))
+            .toList();
     return BurialRequestsResponse(
-      items: (data['data'] as List)
-          .map((item) => BurialRequest.fromJson(item as Map<String, dynamic>))
-          .toList(),
-      total: data['total'] as int,
-      page: data['page'] as int,
-      limit: data['limit'] as int,
-      totalPages: data['total_pages'] as int,
+      items: itemsList,
+      total: (dataMap['total'] as num?)?.toInt() ?? 0,
+      page: (dataMap['page'] as num?)?.toInt() ?? 1,
+      limit: (dataMap['limit'] as num?)?.toInt() ?? 50,
+      totalPages: (dataMap['total_pages'] as num?)?.toInt() ?? 0,
     );
   }
 }

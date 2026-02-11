@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../constants.dart';
 import '../models/deceased.dart';
@@ -131,9 +130,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
     } catch (e) {
       debugPrint('Error picking achievements: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('memorialDetail.errors.pickFiles'.tr())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('memorialDetail.errors.pickFiles'.tr())),
+        );
       }
     }
   }
@@ -173,9 +172,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
     final user = AuthStateManager().currentUser;
     if (user == null || user.phone.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('memorialDetail.errors.loginRequired'.tr())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('memorialDetail.errors.loginRequired'.tr())),
+        );
       }
       return;
     }
@@ -229,17 +228,29 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
     } on ApiException catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('memorialDetail.errors.generic'.tr(namedArgs: {'message': e.message}))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'memorialDetail.errors.generic'.tr(
+                namedArgs: {'message': e.message},
+              ),
+            ),
+          ),
+        );
       }
     } catch (e) {
       debugPrint('Error updating memorial: $e');
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('memorialDetail.errors.genericDetail'.tr(namedArgs: {'error': e.toString()}))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'memorialDetail.errors.genericDetail'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
+        );
       }
     }
   }
@@ -335,7 +346,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
             children: [
               Expanded(
                 child: Text(
-                  'memorialDetail.memorialId'.tr(namedArgs: {'id': m.id.toString()}),
+                  'memorialDetail.memorialId'.tr(
+                    namedArgs: {'id': m.id.toString()},
+                  ),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -348,7 +361,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
                 icon: const Icon(Icons.share),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('memorialDetail.shareInDevelopment'.tr())),
+                    SnackBar(
+                      content: Text('memorialDetail.shareInDevelopment'.tr()),
+                    ),
                   );
                 },
               ),
@@ -403,9 +418,18 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
           ),
           const SizedBox(height: AppSizes.paddingMedium),
           _infoRow('memorialDetail.creator'.tr(), m.creatorPhone),
-          if (_deceased != null) _infoRow('memorialDetail.deceased'.tr(), _deceased!.fullName),
-          _infoRow('memorialDetail.visibility'.tr(), m.isPublic ? 'memorialDetail.public'.tr() : 'memorialDetail.private'.tr()),
-          _infoRow('memorialDetail.lastUpdated'.tr(), _formatDateTime(context, m.updatedAt)),
+          if (_deceased != null)
+            _infoRow('memorialDetail.deceased'.tr(), _deceased!.fullName),
+          _infoRow(
+            'memorialDetail.visibility'.tr(),
+            m.isPublic
+                ? 'memorialDetail.public'.tr()
+                : 'memorialDetail.private'.tr(),
+          ),
+          _infoRow(
+            'memorialDetail.lastUpdated'.tr(),
+            _formatDateTime(context, m.updatedAt),
+          ),
         ],
       ),
     );
@@ -457,7 +481,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'memorialDetail.uploadedPhotos'.tr(namedArgs: {'count': total.toString()}),
+              'memorialDetail.uploadedPhotos'.tr(
+                namedArgs: {'count': total.toString()},
+              ),
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -801,7 +827,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
         if (total > 0) ...[
           const SizedBox(height: AppSizes.paddingMedium),
           Text(
-            'memorialDetail.achievementPhotos'.tr(namedArgs: {'count': total.toString()}),
+            'memorialDetail.achievementPhotos'.tr(
+              namedArgs: {'count': total.toString()},
+            ),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -935,7 +963,9 @@ class _MemorialDetailPageState extends State<MemorialDetailPage> {
               child: TextField(
                 controller: _videoLinkController,
                 readOnly: !canEdit,
-                decoration: _inputDecoration('memorialDetail.youtubeLinkHint'.tr()),
+                decoration: _inputDecoration(
+                  'memorialDetail.youtubeLinkHint'.tr(),
+                ),
                 style: const TextStyle(
                   fontSize: 16,
                   color: Color(0xFF1d1c1a),

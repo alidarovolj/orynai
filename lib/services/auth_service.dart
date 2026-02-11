@@ -18,7 +18,7 @@ class AuthService {
         }
         return responseBody;
       }
-      
+
       final responseBody = result.toString();
       if (responseBody == 'OK' || responseBody.isEmpty) {
         return 'OK';
@@ -40,21 +40,15 @@ class AuthService {
     try {
       final result = await _apiService.post(
         '/api/v2/otp/whatsapp/verify',
-        body: {
-          'phone': phone,
-          'code': code,
-        },
+        body: {'phone': phone, 'code': code},
       );
 
       // Проверяем, является ли ошибка "Role not found"
       if (result is Map<String, dynamic> &&
           result['errorCode'] == 500 &&
-          result['description']?.toString().contains('Role not found') == true) {
-        return {
-          'success': false,
-          'needsRegistration': true,
-          'error': result,
-        };
+          result['description']?.toString().contains('Role not found') ==
+              true) {
+        return {'success': false, 'needsRegistration': true, 'error': result};
       }
 
       // Токен может быть в корне ответа или в data
@@ -65,23 +59,15 @@ class AuthService {
           'token': result['token'] ?? result['data']?['token'],
         };
       }
-      
-      return {
-        'success': true,
-        'data': result,
-        'token': null,
-      };
+
+      return {'success': true, 'data': result, 'token': null};
     } catch (e) {
       if (e is ApiException) {
         // Проверяем, является ли ошибка "Role not found"
         if (e.body?['errorCode'] == 500 &&
             e.body?['description']?.toString().contains('Role not found') ==
                 true) {
-          return {
-            'success': false,
-            'needsRegistration': true,
-            'error': e.body,
-          };
+          return {'success': false, 'needsRegistration': true, 'error': e.body};
         }
         return {
           'success': false,
@@ -125,10 +111,7 @@ class AuthService {
       final result = await _apiService.put(
         '/api/v2/user/signup/whatsapp',
         body: {
-          'whatsappOTP': {
-            'phone': phone,
-            'code': code,
-          },
+          'whatsappOTP': {'phone': phone, 'code': code},
           'iin': iin,
           'name': name,
           'surname': surname,
@@ -136,7 +119,7 @@ class AuthService {
         },
       );
       // PUT метод всегда возвращает Map<String, dynamic>
-      return result as Map<String, dynamic>;
+      return result;
     } catch (e) {
       if (e is ApiException) {
         throw Exception('Failed to signup: ${e.message}');

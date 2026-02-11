@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import '../constants.dart';
@@ -90,9 +89,13 @@ class _CartPageState extends State<CartPage> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('catalog.cart.loadError'.tr(namedArgs: {'error': e.toString()}))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'catalog.cart.loadError'.tr(namedArgs: {'error': e.toString()}),
+            ),
+          ),
+        );
       }
     }
   }
@@ -133,15 +136,21 @@ class _CartPageState extends State<CartPage> {
       await _loadCart();
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('catalog.cart.quantityUpdated'.tr())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('catalog.cart.quantityUpdated'.tr())),
+        );
       }
     } catch (e) {
       debugPrint('Error updating quantity: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('catalog.cart.quantityUpdateError'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(
+            content: Text(
+              'catalog.cart.quantityUpdateError'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
         );
       }
     }
@@ -155,9 +164,9 @@ class _CartPageState extends State<CartPage> {
     } catch (e) {
       debugPrint('Error removing item: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('catalog.cart.removeError'.tr())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('catalog.cart.removeError'.tr())),
+        );
       }
     }
   }
@@ -203,7 +212,9 @@ class _CartPageState extends State<CartPage> {
         requiresAuth: true,
       );
 
-      final ordersData = OrdersResponse.fromJson(ordersResponse as Map<String, dynamic>);
+      final ordersData = OrdersResponse.fromJson(
+        ordersResponse as Map<String, dynamic>,
+      );
       final order = ordersData.items.firstWhere(
         (o) => o.id == orderId,
         orElse: () => throw Exception('Заказ не найден'),
@@ -229,9 +240,15 @@ class _CartPageState extends State<CartPage> {
     } catch (e) {
       debugPrint('Error creating order: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('catalog.cart.createOrderError'.tr(namedArgs: {'error': e.toString()}))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'catalog.cart.createOrderError'.tr(
+                namedArgs: {'error': e.toString()},
+              ),
+            ),
+          ),
+        );
       }
     }
   }
@@ -259,7 +276,9 @@ class _CartPageState extends State<CartPage> {
         title: Text('catalog.cart.editAddress'.tr()),
         content: TextField(
           controller: _addressController,
-          decoration: InputDecoration(hintText: 'catalog.cart.enterAddress'.tr()),
+          decoration: InputDecoration(
+            hintText: 'catalog.cart.enterAddress'.tr(),
+          ),
         ),
         actions: [
           TextButton(
@@ -364,7 +383,11 @@ class _CartPageState extends State<CartPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'catalog.cart.title'.tr(namedArgs: {'count': '${_cartItems.length}'}),
+                                        'catalog.cart.title'.tr(
+                                          namedArgs: {
+                                            'count': '${_cartItems.length}',
+                                          },
+                                        ),
                                         style: const TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.w700,
@@ -449,7 +472,8 @@ class _CartPageState extends State<CartPage> {
                                         maxLines: 4,
                                         decoration: InputDecoration(
                                           hintText:
-                                              'catalog.cart.additionalComments'.tr(),
+                                              'catalog.cart.additionalComments'
+                                                  .tr(),
                                           hintStyle: TextStyle(
                                             color: AppColors.accordionBorder,
                                             fontFamily: 'Manrope',

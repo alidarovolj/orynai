@@ -12,10 +12,7 @@ import 'package:image_picker/image_picker.dart';
 class CreateMemorialPage extends StatefulWidget {
   final int? burialRequestId;
 
-  const CreateMemorialPage({
-    super.key,
-    this.burialRequestId,
-  });
+  const CreateMemorialPage({super.key, this.burialRequestId});
 
   @override
   State<CreateMemorialPage> createState() => _CreateMemorialPageState();
@@ -34,9 +31,9 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
   final TextEditingController _videoLinkController = TextEditingController();
 
   bool _isPublic = false;
-  List<File> _photos = [];
-  List<File> _achievements = [];
-  List<String> _videoLinks = [];
+  final List<File> _photos = [];
+  final List<File> _achievements = [];
+  final List<String> _videoLinks = [];
 
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -78,8 +75,10 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
     }
 
     try {
-      final response = await _apiService.getBurialRequestById(widget.burialRequestId!);
-      
+      final response = await _apiService.getBurialRequestById(
+        widget.burialRequestId!,
+      );
+
       if (response['data'] != null) {
         final data = response['data'] as Map<String, dynamic>;
         setState(() {
@@ -97,13 +96,12 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки данных: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка загрузки данных: $e')));
       }
     }
   }
-
 
   void _addVideoLink() {
     final link = _videoLinkController.text.trim();
@@ -153,85 +151,84 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
             child: Column(
               children: [
                 // Хэдер
-                AppHeader(
-                  isScrolled: _isScrolled,
-                ),
+                AppHeader(isScrolled: _isScrolled),
                 // Контент
                 Expanded(
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : _burialRequest == null
-                          ? const Center(
-                              child: Text(
-                                'Заявка не найдена',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF1d1c1a),
-                                  fontFamily: 'Manrope',
-                                ),
-                              ),
-                            )
-                          : SingleChildScrollView(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                      ? const Center(
+                          child: Text(
+                            'Заявка не найдена',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF1d1c1a),
+                              fontFamily: 'Manrope',
+                            ),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Заголовок с именем и иконкой поделиться
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  // Заголовок с именем и иконкой поделиться
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          _burialRequest!.deceased.fullName,
-                                          style: const TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF1d1c1a),
-                                            fontFamily: 'Manrope',
-                                          ),
-                                        ),
+                                  Expanded(
+                                    child: Text(
+                                      _burialRequest!.deceased.fullName,
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF1d1c1a),
+                                        fontFamily: 'Manrope',
                                       ),
-                                      IconButton(
-                                        icon: const Icon(Icons.share),
-                                        onPressed: () {
-                                          // TODO: Реализовать функционал поделиться
-                                        },
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Информация о захоронении
-                                  _buildBurialInfoCard(),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Загрузка фотографий
-                                  _buildPhotoUploadSection(),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Эпитафия
-                                  _buildEpitaphSection(),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Память о человеке
-                                  _buildMemorySection(),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Публичная личность
-                                  _buildPublicToggle(),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Достижения
-                                  _buildAchievementsSection(),
-                                  const SizedBox(height: AppSizes.paddingLarge),
-                                  // Видеоматериалы
-                                  _buildVideoSection(),
-                                  const SizedBox(height: AppSizes.paddingXLarge),
-                                  // Кнопка создания мемориала
-                                  AppButton(
-                                    text: 'Создать мемориал',
-                                    onPressed: _createMemorial,
-                                    backgroundColor: AppColors.buttonBackground,
+                                  IconButton(
+                                    icon: const Icon(Icons.share),
+                                    onPressed: () {
+                                      // TODO: Реализовать функционал поделиться
+                                    },
                                   ),
-                                  const SizedBox(height: AppSizes.paddingMedium),
                                 ],
                               ),
-                            ),
+                              const SizedBox(height: AppSizes.paddingLarge),
+                              // Информация о захоронении
+                              _buildBurialInfoCard(),
+                              const SizedBox(height: AppSizes.paddingLarge),
+                              // Загрузка фотографий
+                              _buildPhotoUploadSection(),
+                              const SizedBox(height: AppSizes.paddingLarge),
+                              // Эпитафия
+                              _buildEpitaphSection(),
+                              const SizedBox(height: AppSizes.paddingLarge),
+                              // Память о человеке
+                              _buildMemorySection(),
+                              const SizedBox(height: AppSizes.paddingLarge),
+                              // Публичная личность
+                              _buildPublicToggle(),
+                              const SizedBox(height: AppSizes.paddingLarge),
+                              // Достижения
+                              _buildAchievementsSection(),
+                              const SizedBox(height: AppSizes.paddingLarge),
+                              // Видеоматериалы
+                              _buildVideoSection(),
+                              const SizedBox(height: AppSizes.paddingXLarge),
+                              // Кнопка создания мемориала
+                              AppButton(
+                                text: 'Создать мемориал',
+                                onPressed: _createMemorial,
+                                backgroundColor: AppColors.buttonBackground,
+                              ),
+                              const SizedBox(height: AppSizes.paddingMedium),
+                            ],
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -419,11 +416,7 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.image,
-                  size: 48,
-                  color: AppColors.accordionBorder,
-                ),
+                Icon(Icons.image, size: 48, color: AppColors.accordionBorder),
                 const SizedBox(height: AppSizes.paddingMedium),
                 const Text(
                   'Загрузите фотографии',
@@ -543,9 +536,7 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.buttonBackground,
-              ),
+              borderSide: BorderSide(color: AppColors.buttonBackground),
             ),
           ),
           style: const TextStyle(
@@ -595,9 +586,7 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.buttonBackground,
-              ),
+              borderSide: BorderSide(color: AppColors.buttonBackground),
             ),
           ),
           style: const TextStyle(
@@ -623,7 +612,7 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
                   _isPublic = value;
                 });
               },
-              activeColor: AppColors.buttonBackground,
+              activeThumbColor: AppColors.buttonBackground,
             ),
             const SizedBox(width: AppSizes.paddingSmall),
             const Expanded(
@@ -666,9 +655,9 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
     } catch (e) {
       debugPrint('Error picking achievements: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка выбора файлов')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Ошибка выбора файлов')));
       }
     }
   }
@@ -722,9 +711,7 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
                       TextSpan(text: 'Загрузите файлы'),
                       TextSpan(
                         text: ' или перетащите их',
-                        style: TextStyle(
-                          color: Color(0xFF1d1c1a),
-                        ),
+                        style: TextStyle(color: Color(0xFF1d1c1a)),
                       ),
                     ],
                   ),
@@ -823,9 +810,7 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: AppColors.buttonBackground,
-                    ),
+                    borderSide: BorderSide(color: AppColors.buttonBackground),
                   ),
                 ),
                 style: const TextStyle(
@@ -928,9 +913,9 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
   Future<void> _createMemorial() async {
     if (_burialRequest == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Заявка не найдена')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Заявка не найдена')));
       }
       return;
     }
@@ -939,24 +924,25 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
     final user = authManager.currentUser;
     if (user == null || user.phone.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Войдите в аккаунт')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Войдите в аккаунт')));
       }
       return;
     }
 
     // Телефон без +7 для API (77472367503)
-    final userPhone = user.phone.replaceFirst(RegExp(r'^\+?7'), '').replaceAll(RegExp(r'\D'), '');
+    final userPhone = user.phone
+        .replaceFirst(RegExp(r'^\+?7'), '')
+        .replaceAll(RegExp(r'\D'), '');
 
     try {
       if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
         );
       }
 
@@ -1000,17 +986,17 @@ class _CreateMemorialPageState extends State<CreateMemorialPage> {
     } on ApiException catch (e) {
       if (mounted) {
         Navigator.of(context).pop(); // закрыть диалог загрузки
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: ${e.message}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка: ${e.message}')));
       }
     } catch (e) {
       debugPrint('Error creating memorial: $e');
       if (mounted) {
         Navigator.of(context).pop(); // закрыть диалог загрузки при любой ошибке
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
       }
     }
   }
