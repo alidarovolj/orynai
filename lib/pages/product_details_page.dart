@@ -62,9 +62,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('errors.phoneNotAvailable'.tr())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('errors.phoneNotAvailable'.tr())),
+        );
       }
     }
   }
@@ -77,16 +77,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('errors.emailNotAvailable'.tr())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('errors.emailNotAvailable'.tr())),
+        );
       }
     }
   }
 
   Future<void> _openInstagram() async {
     final Uri instagramUrl = Uri.parse(
-      'https://www.instagram.com/ripservice.kz/',
+      'https://www.instagram.com/orynai.kz?igsh=c2VuMjdqcG9xOWYw',
     );
     try {
       if (await canLaunchUrl(instagramUrl)) {
@@ -403,7 +403,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'catalog.productDetails.reviewsCount'.tr(namedArgs: {'count': '0'}),
+                                    'catalog.productDetails.reviewsCount'.tr(
+                                      namedArgs: {'count': '0'},
+                                    ),
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700,

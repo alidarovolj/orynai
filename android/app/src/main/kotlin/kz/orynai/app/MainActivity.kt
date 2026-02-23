@@ -1,4 +1,4 @@
-package kz.orynai.orynai
+package kz.orynai.app
 
 import io.flutter.embedding.android.FlutterActivity
 

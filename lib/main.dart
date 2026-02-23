@@ -157,16 +157,18 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     print('🏗️  [${_getTimestamp()}] MyApp build started');
-    
+
     // Проверяем, нужно ли включить Chucker Flutter
     final env = dotenv.env['ENV'];
     final isDevMode = env == 'dev';
-    
+
     // Список navigator observers
     final navigatorObservers = <NavigatorObserver>[];
     if (isDevMode) {
       navigatorObservers.add(ChuckerFlutter.navigatorObserver);
-      print('🔍 [${_getTimestamp()}] Chucker Flutter navigatorObserver добавлен');
+      print(
+        '🔍 [${_getTimestamp()}] Chucker Flutter navigatorObserver добавлен',
+      );
     }
 
     return RestartWidget(
@@ -177,31 +179,31 @@ class _MyAppState extends State<MyApp> {
         locale: context.locale,
         navigatorObservers: navigatorObservers,
         theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.buttonBackground,
-          brightness: Brightness.light,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.buttonBackground,
+            brightness: Brightness.light,
+          ),
+          scaffoldBackgroundColor: AppColors.background,
+          useMaterial3: true,
+          fontFamily: 'Manrope',
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(fontFamily: 'Manrope'),
+            displayMedium: TextStyle(fontFamily: 'Manrope'),
+            displaySmall: TextStyle(fontFamily: 'Manrope'),
+            headlineLarge: TextStyle(fontFamily: 'Manrope'),
+            headlineMedium: TextStyle(fontFamily: 'Manrope'),
+            headlineSmall: TextStyle(fontFamily: 'Manrope'),
+            titleLarge: TextStyle(fontFamily: 'Manrope'),
+            titleMedium: TextStyle(fontFamily: 'Manrope'),
+            titleSmall: TextStyle(fontFamily: 'Manrope'),
+            bodyLarge: TextStyle(fontFamily: 'Manrope'),
+            bodyMedium: TextStyle(fontFamily: 'Manrope'),
+            bodySmall: TextStyle(fontFamily: 'Manrope'),
+            labelLarge: TextStyle(fontFamily: 'Manrope'),
+            labelMedium: TextStyle(fontFamily: 'Manrope'),
+            labelSmall: TextStyle(fontFamily: 'Manrope'),
+          ),
         ),
-        scaffoldBackgroundColor: AppColors.background,
-        useMaterial3: true,
-        fontFamily: 'Manrope',
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: 'Manrope'),
-          displayMedium: TextStyle(fontFamily: 'Manrope'),
-          displaySmall: TextStyle(fontFamily: 'Manrope'),
-          headlineLarge: TextStyle(fontFamily: 'Manrope'),
-          headlineMedium: TextStyle(fontFamily: 'Manrope'),
-          headlineSmall: TextStyle(fontFamily: 'Manrope'),
-          titleLarge: TextStyle(fontFamily: 'Manrope'),
-          titleMedium: TextStyle(fontFamily: 'Manrope'),
-          titleSmall: TextStyle(fontFamily: 'Manrope'),
-          bodyLarge: TextStyle(fontFamily: 'Manrope'),
-          bodyMedium: TextStyle(fontFamily: 'Manrope'),
-          bodySmall: TextStyle(fontFamily: 'Manrope'),
-          labelLarge: TextStyle(fontFamily: 'Manrope'),
-          labelMedium: TextStyle(fontFamily: 'Manrope'),
-          labelSmall: TextStyle(fontFamily: 'Manrope'),
-        ),
-      ),
         home: const HomePage(),
       ),
     );
@@ -293,7 +295,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _openInstagram() async {
     final Uri instagramUrl = Uri.parse(
-      'https://www.instagram.com/ripservice.kz/',
+      'https://www.instagram.com/orynai.kz?igsh=c2VuMjdqcG9xOWYw',
     );
     try {
       if (await canLaunchUrl(instagramUrl)) {
@@ -597,7 +599,8 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const ProfilePage(initialTab: 5),
+                                        builder: (context) =>
+                                            const ProfilePage(initialTab: 5),
                                       ),
                                     );
                                   }
@@ -962,6 +965,4 @@ class _HomePageState extends State<HomePage> {
     );
     return scaffold;
   }
-
-
 }

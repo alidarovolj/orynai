@@ -63,9 +63,7 @@ class _AboutPageState extends State<AboutPage> {
             child: Column(
               children: [
                 // Хэдер
-                AppHeader(
-                  isScrolled: _isScrolled,
-                ),
+                AppHeader(isScrolled: _isScrolled),
                 // Основной контент
                 Expanded(
                   child: SingleChildScrollView(
@@ -125,7 +123,9 @@ class _AboutPageState extends State<AboutPage> {
                           const SizedBox(height: AppSizes.paddingXLarge),
                           // Блок "Наша цель"
                           Container(
-                            padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                            padding: const EdgeInsets.all(
+                              AppSizes.paddingLarge,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF4C4449),
                               borderRadius: BorderRadius.circular(12),
@@ -141,7 +141,8 @@ class _AboutPageState extends State<AboutPage> {
                                 const SizedBox(width: AppSizes.paddingMedium),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'about.ourGoalTitle'.tr(),
@@ -152,7 +153,9 @@ class _AboutPageState extends State<AboutPage> {
                                           fontFamily: 'Manrope',
                                         ),
                                       ),
-                                      const SizedBox(height: AppSizes.paddingSmall),
+                                      const SizedBox(
+                                        height: AppSizes.paddingSmall,
+                                      ),
                                       Text(
                                         'about.ourGoalText'.tr(),
                                         style: const TextStyle(
@@ -293,7 +296,7 @@ class _AboutPageState extends State<AboutPage> {
 
   Future<void> _openInstagram() async {
     final Uri instagramUrl = Uri.parse(
-      'https://www.instagram.com/ripservice.kz/',
+      'https://www.instagram.com/orynai.kz?igsh=c2VuMjdqcG9xOWYw',
     );
     try {
       if (await canLaunchUrl(instagramUrl)) {
@@ -301,9 +304,9 @@ class _AboutPageState extends State<AboutPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('errors.linkNotAvailable'.tr())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
       }
     }
   }
@@ -318,9 +321,9 @@ class _AboutPageState extends State<AboutPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('errors.linkNotAvailable'.tr())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
       }
     }
   }
@@ -335,9 +338,9 @@ class _AboutPageState extends State<AboutPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('errors.linkNotAvailable'.tr())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('errors.linkNotAvailable'.tr())));
       }
     }
   }
